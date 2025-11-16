@@ -14,6 +14,7 @@ import {
 } from '@/app/components/ui/Card'
 import { Badge } from '@/app/components/ui/Badge'
 import { Loader2, CheckCircle, XCircle, Smartphone, AlertCircle } from 'lucide-react'
+import api from '@/lib/api'
 
 interface Bill {
   id: string
@@ -94,45 +95,25 @@ export default function GCashPaymentComponent({
     setErrorMessage('')
 
     try {
-      // Step 1: Create Payment Intent
-      const intentResponse = await fetch('/api/payments/create-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: bill.amountDue,
-          billId: bill.id,
-          customerName: bill.customerName,
-          accountNumber: bill.accountNumber,
-        }),
+      // Step 1: Create Payment Intent (use shared axios client)
+      const intentRes = await api.post('/api/payments/create-intent', {
+        amount: bill.amountDue,
+        billId: bill.id,
+        customerName: bill.customerName,
+        accountNumber: bill.accountNumber,
       })
 
-      if (!intentResponse.ok) {
-        throw new Error('Failed to create payment intent')
-      }
-
-      const intentData = await intentResponse.json()
-      const paymentIntentId = intentData.data.id
+      const intentData = intentRes.data
+      const paymentIntentId = intentData?.data?.id
 
       // Step 2: Create Payment Method
-      const methodResponse = await fetch('/api/payments/create-method', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paymentIntentId,
-          phoneNumber: phoneNumber.replace(/\D/g, ''),
-        }),
+      const methodRes = await api.post('/api/payments/create-method', {
+        paymentIntentId,
+        phoneNumber: phoneNumber.replace(/\D/g, ''),
       })
 
-      if (!methodResponse.ok) {
-        throw new Error('Failed to create payment method')
-      }
-
-      const methodData = await methodResponse.json()
-      const checkoutUrl = methodData.data.attributes.next_action?.redirect?.url
+      const methodData = methodRes.data
+      const checkoutUrl = methodData?.data?.attributes?.next_action?.redirect?.url
 
       if (checkoutUrl) {
         // Redirect to GCash
@@ -159,10 +140,10 @@ export default function GCashPaymentComponent({
       attempts++
 
       try {
-        const response = await fetch(`/api/payments/status?id=${paymentIntentId}`)
-        const data = await response.json()
-        
-        const status = data.data.attributes.status
+  const res = await api.get('/api/payments/status', { params: { id: paymentIntentId } })
+  const data = res.data
+
+  const status = data?.data?.attributes?.status
 
         if (status === 'succeeded') {
           clearInterval(poll)

@@ -34,7 +34,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {/* Right Side */}
         <div className="flex items-center gap-2">
           {/* Notifications */}
-          <button className="p-2 rounded-lg hover:bg-gray-100 relative">
+          <button className="p-2 rounded-lg hover:bg-gray-100 relative cursor-pointer">
             <Bell className="w-5 h-5 text-gray-600" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
@@ -43,7 +43,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100"
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 cursor-pointer" 
             >
               <div className="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />

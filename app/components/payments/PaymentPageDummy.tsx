@@ -248,11 +248,11 @@ export default function PaymentsPage() {
 
   if (showPayment && selectedBill) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-2xl">
+      <div className="container mx-auto py-8 px-4 max-w-4xl">
         <Button 
           variant="outline" 
           onClick={() => setShowPayment(false)}
-          className="mb-4"
+          className="mb-4 cursor-pointer"
         >
           ← Back to Bill Details
         </Button>
@@ -332,11 +332,11 @@ export default function PaymentsPage() {
 
   if (selectedBill) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-2xl">
+      <div className="container mx-auto py-8 px-4 w-full">
         <Button 
           variant="outline" 
           onClick={() => setSelectedBill(null)}
-          className="mb-4"
+          className="mb-4 cursor-pointer"
         >
           ← Back to Search
         </Button>
@@ -424,7 +424,7 @@ export default function PaymentsPage() {
             <Button 
               onClick={handleProceedToPayment}
               disabled={selectedBill.status === 'paid'}
-              className="w-full"
+              className="w-full cursor-pointer"
               size="lg"
             >
               {selectedBill.status === 'paid' ? 'Already Paid' : 'Proceed to Payment'}
@@ -436,7 +436,7 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <div className="container mx-auto py-8 px-4 w-full">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Pay Water Bill</h1>
         <p className="text-gray-600">Search and pay your water bill using GCash</p>

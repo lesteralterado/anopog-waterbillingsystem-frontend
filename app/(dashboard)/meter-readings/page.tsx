@@ -37,7 +37,7 @@ export default function MeterReadingsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Meter Readings</h1>
           <p className="text-gray-600">View and manage water meter readings</p>
         </div>
-        <Button onClick={() => router.push('/meter-readings/new')}>
+        <Button className='cursor-pointer' onClick={() => router.push('/meter-readings/new')}>
           <Plus className="w-5 h-5 mr-2" />
           Submit Reading
         </Button>

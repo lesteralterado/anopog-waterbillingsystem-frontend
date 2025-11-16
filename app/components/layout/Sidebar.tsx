@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -11,8 +11,8 @@ import {
   Gauge,
   AlertCircle,
   UserCog,
-  Droplets,
 } from 'lucide-react';
+import Image from 'next/image';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
@@ -32,11 +32,11 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-sky-500 rounded-lg flex items-center justify-center">
-            <Droplets className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-lg overflow-hidden">
+            <Image src="/logo.png" alt="Logo" width={40} height={40} className="object-cover" />
           </div>
           <div>
-            <h1 className="font-bold text-lg text-gray-900">Water Billing</h1>
+            <h1 className="flex-col font-bold text-lg text-gray-900">Anopog<span>Water Billing</span></h1>
             <p className="text-xs text-gray-500">Admin Portal</p>
           </div>
         </div>

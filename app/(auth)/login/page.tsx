@@ -108,6 +108,7 @@ export default function Login() {
               type="submit"
               className="group relative w-full"
               disabled={loading}
+              onClick={() => router.push('/dashboard')}
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>

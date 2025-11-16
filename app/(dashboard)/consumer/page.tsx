@@ -118,7 +118,7 @@ export default function ConsumerPage() {
       <PurokTabs
         activePurok={filters.purok}
         onPurokChange={handlePurokChange}
-        counts={purokCounts}
+        // counts={purokCounts}
       />
 
       {/* Search and Filters */}

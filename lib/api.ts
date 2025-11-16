@@ -53,7 +53,44 @@ export const incidentsAPI = {
 
 export const usersAPI = {
   getAll: () => api.get('/api/users'),
-  getConsumers: () => api.get('/api/users/consumers'),
+  // Try a dedicated consumers endpoint first, fall back to fetching all users and filtering by role name or role_id.
+  getConsumers: async () => {
+    try {
+      // Some backends expose /api/users/consumers
+      return await api.get('/api/users/consumers');
+    } catch (err) {
+      // Fallback: fetch all users and filter client-side for role === 'Consumer'
+      const res = await api.get('/api/users');
+      const data = res.data;
+      // Normalize possible response shapes: array, { users: [...] }, { data: [...] }
+      const list: any[] = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.users)
+        ? data.users
+        : Array.isArray(data?.data)
+        ? data.data
+        : [];
+
+      const consumers = list.filter((u: any) => {
+        const roleName = u?.role?.name ?? u?.role_name ?? null;
+        const roleId = u?.role_id ?? u?.role?.id ?? null;
+        return (
+          (typeof roleName === 'string' && roleName.toLowerCase() === 'consumer') ||
+          roleId === '3' ||
+          roleId === 3
+        );
+      });
+
+      // Return an object shaped like a minimal axios response with `data` containing the consumers array.
+      return {
+        ...res,
+        data: consumers,
+      } as any;
+    }
+  },
+  create: (data: any) => api.post('/api/users', data),
+  update: (id: number | string, data: any) => api.put(`/api/users/${id}`, data),
+  remove: (id: number | string) => api.delete(`/api/users/${id}`),
 };
 
 export const dashboardAPI = {

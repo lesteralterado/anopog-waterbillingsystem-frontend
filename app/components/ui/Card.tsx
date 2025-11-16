@@ -1,9 +1,14 @@
-import { ReactNode } from 'react';
+// Lightweight re-export so imports using '@/components/ui/card' work
+export * from './Card'
+
+export default {} as any
+import { ReactNode, MouseEventHandler } from 'react';
 
 interface CardProps {
   className?: string;
   children: ReactNode;
-  onClick?: () => void;
+  // Use React's MouseEventHandler so the prop matches the native onClick signature
+  onClick?: MouseEventHandler<HTMLDivElement>;
 }
 
 interface CardHeaderProps {

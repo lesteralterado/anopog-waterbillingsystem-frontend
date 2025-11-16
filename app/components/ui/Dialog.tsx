@@ -1,4 +1,7 @@
+"use client";
+
 import { ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface DialogProps {
@@ -99,18 +102,17 @@ export function DialogContent({ className, children }: DialogContentProps) {
   }, [isOpen]);
 
   if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  const content = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50"
+        className="fixed inset-0 bg-black/60"
         onClick={() => setIsOpen(false)}
       />
-      
+
       {/* Dialog */}
       <div
-        className={`relative z-50 bg-white rounded-lg shadow-lg w-full max-w-lg mx-4 ${
+        className={`relative z-[10000] bg-white rounded-lg shadow-lg w-full max-w-lg mx-4 ${
           className || ''
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -126,6 +128,12 @@ export function DialogContent({ className, children }: DialogContentProps) {
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+
+  return null;
 }
 
 export function DialogHeader({ className, children }: DialogHeaderProps) {

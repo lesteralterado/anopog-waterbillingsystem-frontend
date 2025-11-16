@@ -9,6 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { Button } from '@/app/components/ui/Button';
 import { Droplets, Users, DollarSign, Bell, TrendingUp, Calendar, CheckCircle, Clock, FileText, CreditCard } from 'lucide-react';
 // import AdminSidebar from '@/app/components/AdminSidebar';
+import { ChartLineDefault as ChartLine } from '@/app/components/dashboard/chart-line';
+import { ChartAreaInteractive } from '@/app/components/dashboard/chart-area-interactive';
+import { usersAPI } from '@/lib/api';
 
 interface DashboardStats {
   totalConsumers: number;
@@ -42,99 +45,23 @@ export default function WaterBillingDashboard() {
   const [recentBills, setRecentBills] = useState<RecentBill[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
-//   useEffect(() => {
-//     if (!loading) {
-//       // if (!user || !isAdmin) {
-//       //   router.push('/');
-//       //   return;
-//       // }
-//       fetchStats();
-//       fetchRecentBookings();
-//     }
-//   }, [user, isAdmin, loading, router]);
+  useEffect(() => {
+    const loadConsumers = async () => {
+      try {
+        setLoadingStats(true);
+        const res = await usersAPI.getConsumers();
+        const consumers = res?.data ?? [];
+        const count = Array.isArray(consumers) ? consumers.length : 0;
+        setStats((prev) => ({ ...prev, totalConsumers: count }));
+      } catch (err) {
+        console.error('Failed to load consumers:', err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
 
-//   const fetchRecentBookings = async () => {
-//     try {
-//       const { data, error } = await client
-//         .from('bookings')
-//         .select(`
-//           id,
-//           created_at,
-//           status,
-//           profiles!inner (
-//             full_name
-//           ),
-//           cars!inner (
-//             model,
-//             make
-//           )
-//         `)
-//         .order('created_at', { ascending: false })
-//         .limit(5);
-
-//       if (error) throw error;
-//       setRecentBookings(data || []);
-//     } catch (error) {
-//       console.error('Error fetching recent bookings:', error);
-//     }
-//   };
-
-//   const fetchStats = async () => {
-//     try {
-//       // Get total bookings
-//       const { count: totalBookings } = await client
-//         .from('bookings')
-//         .select('*', { count: 'exact', head: true });
-
-//       // Get pending bookings
-//       const { count: pendingBookings } = await client
-//         .from('bookings')
-//         .select('*', { count: 'exact', head: true })
-//         .eq('status', 'pending');
-
-//       // Get confirmed bookings
-//       const { count: confirmedBookings } = await client
-//         .from('bookings')
-//         .select('*', { count: 'exact', head: true })
-//         .eq('status', 'confirmed');
-
-//       // Get total revenue from paid bookings
-//       const { data: revenueData } = await client
-//         .from('bookings')
-//         .select('total_price')
-//         .eq('payment_status', 'paid');
-
-//       const totalRevenue = revenueData?.reduce((sum, booking) => sum + booking.total_price, 0) || 0;
-
-//       setStats({
-//         totalBookings: totalBookings || 0,
-//         pendingBookings: pendingBookings || 0,
-//         confirmedBookings: confirmedBookings || 0,
-//         totalRevenue
-//       });
-//     } catch (error) {
-//       console.error('Error fetching stats:', error);
-//     } finally {
-//       setLoadingStats(false);
-//     }
-//   };
-
-
-//   if (loading) {
-//     return (
-//       <div className="flex items-center justify-center min-h-screen">
-//         <div className="text-lg">Loading...</div>
-//       </div>
-//     );
-//   }
-
-  // if (!isAdmin) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen">
-  //       <div className="text-lg text-red-500">Access denied. Admin privileges required.</div>
-  //     </div>
-  //   );
-  // }
+    loadConsumers();
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -208,9 +135,14 @@ export default function WaterBillingDashboard() {
             </Card>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
+            <ChartLine />
+            {/* <ChartAreaInteractive /> */}
+          </div>
+
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <FileText className="mr-2 h-5 w-5" />
@@ -221,13 +153,13 @@ export default function WaterBillingDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">
+                <Button className="cursor-pointer hover:shadow-lg w-full">
                   <a href="/bills">Manage Bills</a>
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Users className="mr-2 h-5 w-5" />
@@ -238,13 +170,13 @@ export default function WaterBillingDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full" variant="outline">
+                <Button className="cursor-pointer hover:shadow-lg w-full" variant="outline">
                   <a href="/consumer">Manage Consumers</a>
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <CreditCard className="mr-2 h-5 w-5" />
@@ -255,7 +187,7 @@ export default function WaterBillingDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full" variant="outline">
+                <Button className="cursor-pointer hover:shadow-lg w-full" variant="outline">
                   <a href="/payments">Manage Payments</a>
                 </Button>
               </CardContent>
