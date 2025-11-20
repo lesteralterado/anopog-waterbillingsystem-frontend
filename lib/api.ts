@@ -24,29 +24,29 @@ api.interceptors.request.use((config) => {
 export const authAPI = {
   login: (email: string, password: string) =>
     api.post('/api/auth/login', { email, password }),
-  signup: (data: any) => api.post('/api/auth/signup', data),
+  signup: (data: unknown) => api.post('/api/auth/signup', data),
 };
 
 export const billsAPI = {
   getAll: () => api.get('/api/bills'),
   getMyBills: () => api.get('/api/bills/my-bills'),
-  create: (data: any) => api.post('/api/bills', data),
+  create: (data: unknown) => api.post('/api/bills', data),
 };
 
 export const paymentsAPI = {
   getAll: () => api.get('/api/payments'),
   getMyPayments: () => api.get('/api/payments/my-payments'),
-  create: (data: any) => api.post('/api/payments', data),
+  create: (data: unknown) => api.post('/api/payments', data),
 };
 
 export const meterReadingsAPI = {
   getAll: () => api.get('/api/meter-readings'),
-  create: (data: any) => api.post('/api/meter-readings', data),
+  create: (data: unknown) => api.post('/api/meter-readings', data),
 };
 
 export const incidentsAPI = {
   getAll: () => api.get('/api/incidents'),
-  create: (data: any) => api.post('/api/incidents', data),
+  create: (data: unknown) => api.post('/api/incidents', data),
   updateStatus: (id: number, status: string) =>
     api.patch(`/api/incidents/${id}`, { status }),
 };
@@ -58,12 +58,12 @@ export const usersAPI = {
     try {
       // Some backends expose /api/users/consumers
       return await api.get('/api/users/consumers');
-    } catch (err) {
+    } catch {
       // Fallback: fetch all users and filter client-side for role === 'Consumer'
       const res = await api.get('/api/users');
       const data = res.data;
       // Normalize possible response shapes: array, { users: [...] }, { data: [...] }
-      const list: any[] = Array.isArray(data)
+      const list: Record<string, unknown>[] = Array.isArray(data)
         ? data
         : Array.isArray(data?.users)
         ? data.users
@@ -71,9 +71,9 @@ export const usersAPI = {
         ? data.data
         : [];
 
-      const consumers = list.filter((u: any) => {
-        const roleName = u?.role?.name ?? u?.role_name ?? null;
-        const roleId = u?.role_id ?? u?.role?.id ?? null;
+      const consumers = list.filter((u: Record<string, unknown>) => {
+        const roleName = (u?.role as Record<string, unknown>)?.name ?? u?.role_name ?? null;
+        const roleId = u?.role_id ?? (u?.role as Record<string, unknown>)?.id ?? null;
         return (
           (typeof roleName === 'string' && roleName.toLowerCase() === 'consumer') ||
           roleId === '3' ||
@@ -85,11 +85,11 @@ export const usersAPI = {
       return {
         ...res,
         data: consumers,
-      } as any;
+      };
     }
   },
-  create: (data: any) => api.post('/api/users', data),
-  update: (id: number | string, data: any) => api.put(`/api/users/${id}`, data),
+  create: (data: unknown) => api.post('/api/users', data),
+  update: (id: number | string, data: unknown) => api.put(`/api/users/${id}`, data),
   remove: (id: number | string) => api.delete(`/api/users/${id}`),
 };
 

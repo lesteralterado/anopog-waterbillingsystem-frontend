@@ -46,9 +46,9 @@ export const metadata: Metadata = {
   title: 'Water Billing System - Admin',
   description: 'Admin dashboard for water billing management',
   icons: {
-    icon: '/logo.png',
-    shortcut: '/logo.png',
-    apple: '/logo.png',
+    icon: '/anopog.png',
+    shortcut: '/anopog.png',
+    apple: '/anopog.png',
   },
 };
 

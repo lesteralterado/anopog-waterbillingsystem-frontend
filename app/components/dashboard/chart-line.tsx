@@ -21,17 +21,17 @@ import {
 export const description = "A line chart"
 
 const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
+  { month: "July", usage: 186 },
+  { month: "August", usage: 305 },
+  { month: "September", usage: 237 },
+  { month: "October", usage: 73 },
+  { month: "November", usage: 209 },
+  { month: "December", usage: 214 },
 ]
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  usage: {
+    label: "Water Usage",
     color: "var(--chart-1)",
   },
 } satisfies ChartConfig
@@ -68,9 +68,9 @@ export function ChartLineDefault() {
           content={<ChartTooltipContent hideLabel />}
               />
               <Line
-          dataKey="desktop"
+          dataKey="usage"
           type="natural"
-          stroke="var(--color-desktop)"
+          stroke="var(--color-usage)"
           strokeWidth={2}
           dot={false}
               />
@@ -83,7 +83,7 @@ export function ChartLineDefault() {
           Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
         </div>
         <div className="text-muted-foreground leading-none">
-          Showing total visitors for the last 6 months
+          Showing total water usage for the last 6 months
         </div>
       </CardFooter>
     </Card>

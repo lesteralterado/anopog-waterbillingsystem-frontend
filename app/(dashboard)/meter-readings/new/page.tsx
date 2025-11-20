@@ -106,7 +106,7 @@ export default function NewMeterReadingPage() {
                 { value: '', label: 'Choose a consumer...' },
                 ...mockConsumers.map((consumer) => ({
                   value: consumer.id.toString(),
-                  label: `${consumer.name} - ${consumer.address}`,
+                  label: `${consumer.full_name || consumer.username} - ${consumer.address}`,
                 })),
               ]}
               required

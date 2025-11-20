@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 // import useAuth from '@/hooks/useAuth';
 // import client from '@/api/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/Card';
 // import { Button } from '@/app/components/ui/button';
 import { Button } from '@/app/components/ui/Button';
-import { Droplets, Users, DollarSign, Bell, TrendingUp, Calendar, CheckCircle, Clock, FileText, CreditCard } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, CheckCircle, Clock, FileText, CreditCard } from 'lucide-react';
 // import AdminSidebar from '@/app/components/AdminSidebar';
 import { ChartLineDefault as ChartLine } from '@/app/components/dashboard/chart-line';
-import { ChartAreaInteractive } from '@/app/components/dashboard/chart-area-interactive';
 import { usersAPI } from '@/lib/api';
 
 interface DashboardStats {
@@ -34,15 +34,14 @@ interface RecentBill {
 }
 
 export default function WaterBillingDashboard() {
-//   const { user, profile, loading, isAdmin } = useAuth();
-  const router = useRouter();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalConsumers: 0,
-    pendingBills: 0,
-    paidBills: 0,
-    totalRevenue: 0
-  });
-  const [recentBills, setRecentBills] = useState<RecentBill[]>([]);
+ //   const { user, profile, loading, isAdmin } = useAuth();
+   const [stats, setStats] = useState<DashboardStats>({
+     totalConsumers: 0,
+     pendingBills: 0,
+     paidBills: 0,
+     totalRevenue: 0
+   });
+   const [recentBills, setRecentBills] = useState<RecentBill[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
@@ -154,7 +153,7 @@ export default function WaterBillingDashboard() {
               </CardHeader>
               <CardContent>
                 <Button className="cursor-pointer hover:shadow-lg w-full">
-                  <a href="/bills">Manage Bills</a>
+                  <Link href="/bills">Manage Bills</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -171,7 +170,7 @@ export default function WaterBillingDashboard() {
               </CardHeader>
               <CardContent>
                 <Button className="cursor-pointer hover:shadow-lg w-full" variant="outline">
-                  <a href="/consumer">Manage Consumers</a>
+                  <Link href="/consumer">Manage Consumers</Link>
                 </Button>
               </CardContent>
             </Card>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { billsAPI, usersAPI } from '@/lib/api';
-import { Bill } from '@/types';
+import { Bill, User } from '@/types';
 import BillsTable from '@/app/components/bills/BillsTable';
 import { Button } from '@/app/components/ui/Button';
 import {
@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/app/components/ui/Dialog';
 import { Loading } from '@/app/components/ui/Loading';
 import { Plus, Search } from 'lucide-react';
@@ -21,18 +20,17 @@ export default function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Consumers state and loader
-  const [consumers, setConsumers] = useState<any[]>([]);
+  const [consumers, setConsumers] = useState<User[]>([]);
 
   useEffect(() => {
     const fetchConsumers = async () => {
       try {
         const res = await usersAPI.getConsumers();
         const data = res.data;
-        const list: any[] = Array.isArray(data)
+        const list: User[] = Array.isArray(data)
           ? data
           : Array.isArray(data?.users)
           ? data.users
@@ -178,7 +176,7 @@ export default function BillsPage() {
                 setIsDialogOpen(false);
               } catch (err) {
                 console.error('Failed to create bill', err);
-                const message = (err as any)?.response?.data?.message || 'Failed to create bill';
+                const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to create bill';
                 alert(message);
               }
             }}
@@ -202,7 +200,7 @@ export default function BillsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1">Due date</label>
-// loadConsumers removed — consumers are now loaded inside the BillsPage component. 
+                {/* loadConsumers removed — consumers are now loaded inside the BillsPage component. */}
 </div>
 </div>
           </form>
@@ -222,15 +220,4 @@ export default function BillsPage() {
       </div>
     </div>
   );
-}
-
-async function loadConsumers() {
-  try {
-    const res = await usersAPI.getConsumers();
-    // res.data will be an array of consumer user objects
-    const consumers = res.data;
-    console.log('consumers', consumers);
-  } catch (err) {
-    console.error('Failed to load consumers', err);
-  }
 }

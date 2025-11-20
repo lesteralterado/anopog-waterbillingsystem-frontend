@@ -33,7 +33,7 @@ export default function Sidebar() {
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg overflow-hidden">
-            <Image src="/logo.png" alt="Logo" width={40} height={40} className="object-cover" />
+            <Image src="/anopog.png" alt="Logo" width={40} height={40} className="object-cover" />
           </div>
           <div>
             <h1 className="flex-col font-bold text-lg text-gray-900">Anopog<span>Water Billing</span></h1>

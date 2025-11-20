@@ -1,11 +1,16 @@
 export interface User {
-  id: number;
-  email: string;
-  name: string;
-  phone?: string;
-  address?: string;
-  role: 'admin' | 'reader' | 'consumer';
-  created_at?: string;
+  id: string;
+  username: string;
+  role_id: string;
+  purok: number | null;
+  meter_number: string | null;
+  full_name: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  role: {
+    name: string;
+  };
 }
 
 export interface Bill {

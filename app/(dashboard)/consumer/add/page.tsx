@@ -6,7 +6,6 @@ import { Button } from '@/app/components/ui/Button'
 import { Input } from '@/app/components/ui/Input'
 import { Select } from '@/app/components/ui/Select'
 import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/Card'
-import api from '@/lib/api'
 import { ToastContainer, toast } from 'react-toastify'
 
 const PUROK_OPTIONS = Array.from({ length: 8 }, (_, i) => ({ value: String(i + 1), label: `Purok ${i + 1}` }))
@@ -62,9 +61,10 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
         toast.success('Consumer created successfully')
         router.push('/consumer')
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Failed to create consumer', err)
-        toast.error(err?.message || err?.response?.data?.message || 'Failed to create consumer')
+        const message = err instanceof Error ? err.message : 'Failed to create consumer'
+        toast.error(message)
     } finally {
         setLoading(false)
     }

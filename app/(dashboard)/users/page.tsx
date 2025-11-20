@@ -32,7 +32,7 @@ import {
 import { Badge } from '@/app/components/ui/Badge'
 import { UserPlus, Search, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import { ToastContainer, toast } from 'react-toastify';
-import api from '@/lib/api'
+import api, { usersAPI } from '@/lib/api'
 
 // Toast message constants for better maintainability
 const TOAST_MESSAGES = {
@@ -42,52 +42,23 @@ const TOAST_MESSAGES = {
   USER_DELETE_ERROR: 'Failed to delete user. Please try again.',
 } as const;
 
-type UserRole = 'Admin' | 'Meter Reader' | 'Consumer'
+type UserRole = 'Admin' | 'Meter-Reader' | 'Client'
 
 interface User {
   id: string
+  fullName: string
   username: string
-  role: string // role.name from API
-  role_id: number
-  purok: string | null
-  meterNumber: string | null
-  fullName: string | null
-  address: string | null
-  phoneNumber: string | null
-  email: string | null
+  role: UserRole
+  email?: string
+  phoneNumber?: string
+  address?: string
+  meterNumber?: string
   createdAt: string
   status: 'Active' | 'Inactive'
 }
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await api.get('/api/users')
-        const mappedUsers = response.data.map((user: any) => ({
-          id: user.id,
-          username: user.username,
-          role: user.role.name,
-          role_id: user.role_id,
-          purok: user.purok,
-          meterNumber: user.meter_number,
-          fullName: user.full_name,
-          address: user.address,
-          phoneNumber: user.phone,
-          email: user.email,
-          createdAt: new Date().toISOString().split('T')[0],
-          status: 'Active' as const,
-        }))
-        setUsers(mappedUsers)
-      } catch (error) {
-        console.error('Error fetching users:', error)
-        toast.error('Failed to fetch users')
-      }
-    }
-    fetchUsers()
-  }, [])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -103,8 +74,44 @@ export default function UsersPage() {
     phoneNumber: '',
     address: '',
     meterNumber: '',
-    purok: null as string | null,
   })
+
+  // Transform API user data to match User interface
+  const transformUser = (apiUser: any): User => {
+    const roleMap: Record<string, UserRole> = {
+      '1': 'Admin',
+      '2': 'Meter-Reader',
+      '3': 'Client'
+    };
+
+    return {
+      id: String(apiUser.id),
+      fullName: apiUser.full_name || apiUser.username,
+      username: apiUser.username,
+      role: roleMap[String(apiUser.role_id)] || 'Client',
+      email: apiUser.email || undefined,
+      phoneNumber: apiUser.phone || undefined,
+      address: apiUser.purok ? `Purok ${apiUser.purok}` : apiUser.address || undefined,
+      meterNumber: apiUser.meter_number || undefined,
+      createdAt: new Date().toISOString().split('T')[0], // Not in API, use current date
+      status: 'Active'
+    };
+  };
+
+  // Fetch users on component mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await usersAPI.getAll();
+        const transformedUsers = res.data.map(transformUser);
+        setUsers(transformedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        toast.error('Failed to fetch users');
+      }
+    };
+    fetchUsers();
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -127,13 +134,6 @@ export default function UsersPage() {
       return
     }
 
-    // Map role to role_id
-    const roleMap: Record<UserRole, number> = {
-      Admin: 1,
-      'Meter Reader': 2,
-      Consumer: 3,
-    }
-
     try {
       if (editingUser) {
         setUsers(users.map(user =>
@@ -143,8 +143,6 @@ export default function UsersPage() {
                 fullName: formData.fullName.trim(),
                 username: formData.username.trim(),
                 role: formData.role as UserRole,
-                role_id: roleMap[formData.role as UserRole],
-                purok: formData.purok,
                 email: formData.email.trim(),
                 phoneNumber: formData.phoneNumber.trim(),
                 address: formData.address.trim(),
@@ -159,8 +157,6 @@ export default function UsersPage() {
           fullName: formData.fullName.trim(),
           username: formData.username.trim(),
           role: formData.role as UserRole,
-          role_id: roleMap[formData.role as UserRole],
-          purok: formData.purok,
           email: formData.email.trim(),
           phoneNumber: formData.phoneNumber.trim(),
           address: formData.address.trim(),
@@ -190,7 +186,6 @@ export default function UsersPage() {
       phoneNumber: '',
       address: '',
       meterNumber: '',
-      purok: null,
     })
     setEditingUser(null)
     setShowPassword(false)
@@ -199,15 +194,14 @@ export default function UsersPage() {
   const handleEdit = (user: User) => {
     setEditingUser(user)
     setFormData({
-      fullName: user.fullName || '',
+      fullName: user.fullName,
       username: user.username,
       password: '',
-      role: user.role as UserRole,
+      role: user.role,
       email: user.email || '',
       phoneNumber: user.phoneNumber || '',
       address: user.address || '',
       meterNumber: user.meterNumber || '',
-      purok: user.purok,
     })
     setIsDialogOpen(true)
   }
@@ -219,9 +213,8 @@ export default function UsersPage() {
       return
     }
 
-    if (confirm(`Are you sure you want to delete ${userToDelete.fullName || userToDelete.username}?`)) {
+    if (confirm(`Are you sure you want to delete ${userToDelete.fullName}?`)) {
       try {
-        await api.delete(`/api/users/${id}`)
         setUsers(users.filter(user => user.id !== id))
         toast.success(TOAST_MESSAGES.USER_DELETED)
       } catch (error) {
@@ -232,7 +225,7 @@ export default function UsersPage() {
   }
 
   const filteredUsers = users.filter(user =>
-    (user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+    user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.role.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -240,13 +233,13 @@ export default function UsersPage() {
   // Memoize filtered users for performance optimization
   const memoizedFilteredUsers = useMemo(() => filteredUsers, [users, searchQuery])
 
-  const getRoleBadgeColor = (role: string) => {
+  const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
       case 'Admin':
         return 'bg-red-100 text-red-800 hover:bg-red-100'
-      case 'Meter Reader':
+      case 'Meter-Reader':
         return 'bg-blue-100 text-blue-800 hover:bg-blue-100'
-      case 'Consumer':
+      case 'Client':
         return 'bg-green-100 text-green-800 hover:bg-green-100'
       default:
         return ''
@@ -255,8 +248,8 @@ export default function UsersPage() {
 
   const roleStats = useMemo(() => ({
     Admin: users.filter(u => u.role === 'Admin').length,
-    'Meter Reader': users.filter(u => u.role === 'Meter Reader').length,
-    Consumer: users.filter(u => u.role === 'Consumer').length,
+    'Meter-Reader': users.filter(u => u.role === 'Meter-Reader').length,
+    Client: users.filter(u => u.role === 'Client').length,
   }), [users])
 
   return (
@@ -266,15 +259,7 @@ export default function UsersPage() {
         <p className="text-gray-600">Manage users for the Water Billing System</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600">Admins</CardTitle>
@@ -288,15 +273,15 @@ export default function UsersPage() {
             <CardTitle className="text-sm font-medium text-gray-600">Meter Readers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{roleStats['Meter Reader']}</div>
+            <div className="text-2xl font-bold">{roleStats['Meter-Reader']}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Consumers</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Clients/Consumers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{roleStats.Consumer}</div>
+            <div className="text-2xl font-bold">{roleStats.Client}</div>
           </CardContent>
         </Card>
       </div>
@@ -356,8 +341,8 @@ export default function UsersPage() {
                           options={[
                             { value: '', label: 'Select role' },
                             { value: 'Admin', label: 'Admin' },
-                            { value: 'Meter Reader', label: 'Meter Reader' },
-                            { value: 'Consumer', label: 'Consumer' },
+                            { value: 'Meter-Reader', label: 'Meter Reader' },
+                            { value: 'Client', label: 'Client/Consumer' },
                           ]}
                           required
                         />
@@ -417,23 +402,23 @@ export default function UsersPage() {
                         />
                       </div>
 
-                      {formData.role === 'Consumer' && (
+                      {formData.role === 'Client' && (
                         <>
                           <div className="grid gap-2">
                             <Label htmlFor="purok">Purok *</Label>
                             <Select
-                              value={formData.purok || ''}
-                              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, purok: e.target.value || null })}
+                              value={formData.address}
+                              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, address: e.target.value })}
                               options={[
                                 { value: '', label: 'Select Purok' },
-                                { value: '1', label: 'Purok 1' },
-                                { value: '2', label: 'Purok 2' },
-                                { value: '3', label: 'Purok 3' },
-                                { value: '4', label: 'Purok 4' },
-                                { value: '5', label: 'Purok 5' },
-                                { value: '6', label: 'Purok 6' },
-                                { value: '7', label: 'Purok 7' },
-                                { value: '8', label: 'Purok 8' },
+                                { value: 'Purok 1', label: 'Purok 1' },
+                                { value: 'Purok 2', label: 'Purok 2' },
+                                { value: 'Purok 3', label: 'Purok 3' },
+                                { value: 'Purok 4', label: 'Purok 4' },
+                                { value: 'Purok 5', label: 'Purok 5' },
+                                { value: 'Purok 6', label: 'Purok 6' },
+                                { value: 'Purok 7', label: 'Purok 7' },
+                                { value: 'Purok 8', label: 'Purok 8' },
                               ]}
                               required
                             />
@@ -482,14 +467,20 @@ export default function UsersPage() {
                           // Map role string to role_id expected by backend/prisma
                           const roleMap: Record<UserRole, number> = {
                             Admin: 1,
-                            'Meter Reader': 2,
-                            Consumer: 3,
+                            'Meter-Reader': 2,
+                            Client: 3,
+                          }
+                          // Extract purok number from address if Client
+                          let purok: number | null = null;
+                          if (formData.role === 'Client' && formData.address.trim()) {
+                            const match = formData.address.trim().match(/Purok (\d+)/);
+                            purok = match ? parseInt(match[1]) : null;
                           }
                           const payload: any = {
                             username: formData.username.trim(),
                             password: formData.password.trim() || undefined,
                             role_id: roleMap[formData.role as UserRole],
-                            purok: formData.purok,
+                            purok: purok,
                           }
 
                           // If editingUser, call update endpoint; otherwise create
@@ -512,12 +503,10 @@ export default function UsersPage() {
                                 fullName: formData.fullName.trim(),
                                 username: result.username ?? formData.username.trim(),
                                 role: formData.role as UserRole,
-                                role_id: roleMap[formData.role as UserRole],
-                                purok: result.purok ?? formData.purok,
-                                meterNumber: result.meter_number ?? formData.meterNumber.trim(),
-                                address: result.address ?? formData.address.trim(),
-                                phoneNumber: formData.phoneNumber.trim(),
                                 email: formData.email.trim(),
+                                phoneNumber: formData.phoneNumber.trim(),
+                                address: formData.address.trim(),
+                                meterNumber: formData.meterNumber.trim(),
                               }
                               : u
                             ))
@@ -526,15 +515,13 @@ export default function UsersPage() {
                             // Backend returns created user { id, username, role_id, purok }
                             const newUser: User = {
                             id: String(result.id),
+                            fullName: formData.fullName.trim() || result.username,
                             username: result.username,
                             role: formData.role as UserRole,
-                            role_id: roleMap[formData.role as UserRole],
-                            purok: result.purok ?? formData.purok,
-                            meterNumber: result.meter_number ?? formData.meterNumber.trim(),
-                            fullName: formData.fullName.trim() || result.username,
-                            address: result.address ?? formData.address.trim(),
-                            phoneNumber: formData.phoneNumber.trim(),
                             email: formData.email.trim(),
+                            phoneNumber: formData.phoneNumber.trim(),
+                            address: result.purok ?? formData.address.trim(),
+                            meterNumber: formData.meterNumber.trim(),
                             createdAt: new Date().toISOString().split('T')[0],
                             status: 'Active',
                             }
@@ -585,15 +572,15 @@ export default function UsersPage() {
                 ) : (
                   memoizedFilteredUsers.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.fullName || user.username || 'N/A'}</TableCell>
+                      <TableCell className="font-medium">{user.fullName}</TableCell>
                       <TableCell>{user.username}</TableCell>
                       <TableCell>
                         <Badge className={getRoleBadgeColor(user.role)}>{user.role}</Badge>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {user.email ? <div>{user.email}</div> : <div className="text-gray-400">No email</div>}
-                          {user.phoneNumber ? <div className="text-gray-500">{user.phoneNumber}</div> : <div className="text-gray-400">No phone</div>}
+                          {user.email && <div>{user.email}</div>}
+                          {user.phoneNumber && <div className="text-gray-500">{user.phoneNumber}</div>}
                         </div>
                       </TableCell>
                       <TableCell>

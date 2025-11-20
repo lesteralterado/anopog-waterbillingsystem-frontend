@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/app/components/ui/Button';
 import { Input } from '@/app/components/ui/Input';
 import Alert from '@/app/components/ui/Alert';
@@ -23,10 +24,10 @@ export default function Login() {
 
     try {
       await login(email, password);
-      router.push('/dashboard');
+      // router.push('/dashboard');
       router.refresh();
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to sign in');
     } finally {
       setLoading(false);
     }
@@ -36,6 +37,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <Image src="/logo.png" alt="Anopog Logo" width={150} height={150} className="mx-auto mb-4" />
           <h1 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h1>
@@ -46,9 +48,7 @@ export default function Login() {
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           {error && (
-            <Alert {...({variant:"destructive"} as any)}>
-              {error}
-            </Alert>
+            <Alert type="error" message={error} />
           )}
 
           <div className="rounded-md shadow-sm -space-y-px">

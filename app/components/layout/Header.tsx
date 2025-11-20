@@ -27,7 +27,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {/* Page Title */}
         <div className="flex-1 lg:ml-0">
           <h2 className="text-xl font-semibold text-gray-900">
-            Welcome back, {user?.name}!
+            Welcome back, {user?.full_name || user?.username}!
           </h2>
         </div>
 
@@ -53,7 +53,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                 <div className="px-4 py-2 border-b border-gray-100">
-                  <p className="font-medium text-sm text-gray-900">{user?.name}</p>
+                  <p className="font-medium text-sm text-gray-900">{user?.full_name || user?.username}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
                 <button

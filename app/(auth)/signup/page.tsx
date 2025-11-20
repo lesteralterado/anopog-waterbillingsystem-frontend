@@ -47,8 +47,8 @@ export default function SignupPage() {
       });
       router.push('/login?message=Please check your email to verify your account');
       router.refresh();
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign up');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to sign up');
     } finally {
       setLoading(false);
     }
@@ -64,9 +64,7 @@ export default function SignupPage() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSignup}>
           {error && (
-            <Alert {...({variant:"destructive"}) as any}>
-              {error}
-            </Alert>
+            <Alert type="error" message={error} />
           )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>

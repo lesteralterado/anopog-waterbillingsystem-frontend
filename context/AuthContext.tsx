@@ -18,31 +18,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // 🎭 MOCK USERS DATABASE (Temporary - No Backend Needed)
 const MOCK_USERS = [
   {
-    id: 1,
+    id: '1',
     email: 'admin@waterworks.com',
     password: 'admin123',
-    name: 'Admin User',
+    username: 'admin',
+    full_name: 'Admin User',
     phone: '+63 912 345 6789',
     address: '123 Water St, Manila',
-    role: 'admin' as const,
+    role_id: '1',
+    purok: null,
+    meter_number: null,
+    role: { name: 'Admin' },
   },
   {
-    id: 2,
+    id: '2',
     email: 'staff@waterworks.com',
     password: 'staff123',
-    name: 'Staff Member',
+    username: 'staff',
+    full_name: 'Staff Member',
     phone: '+63 912 345 6790',
     address: '456 Flow Ave, Quezon City',
-    role: 'reader' as const,
+    role_id: '2',
+    purok: null,
+    meter_number: null,
+    role: { name: 'Reader' },
   },
   {
-    id: 3,
+    id: '3',
     email: 'john@gmail.com',
     password: 'consumer123',
-    name: 'John Dela Cruz',
+    username: 'john_doe',
+    full_name: 'John Dela Cruz',
     phone: '+63 912 345 6791',
     address: '789 River Road, Makati',
-    role: 'consumer' as const,
+    role_id: '3',
+    purok: 1,
+    meter_number: 'M001',
+    role: { name: 'Consumer' },
   },
 ];
 
@@ -104,13 +116,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Create new user
+    const newUserId = (MOCK_USERS.length + 1).toString();
     const newUser = {
-      id: MOCK_USERS.length + 1,
+      id: newUserId,
       email: data.email,
-      name: data.name,
-      phone: data.phone || '',
-      address: data.address || '',
-      role: data.role || 'admin' as const,
+      username: data.username || data.email.split('@')[0],
+      full_name: data.full_name || data.name,
+      phone: data.phone || null,
+      address: data.address || null,
+      role_id: '3', // Default to consumer
+      purok: null,
+      meter_number: null,
+      role: { name: 'Consumer' },
     };
 
     // Add to mock database (in real app, this would be server-side)
@@ -118,14 +135,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Create mock token
     const mockToken = `mock_token_${Date.now()}_${newUser.id}`;
-    
+
     // Store in localStorage
     localStorage.setItem('mock_token', mockToken);
     localStorage.setItem('mock_user', JSON.stringify(newUser));
-    
+
     setToken(mockToken);
     setUser(newUser);
-    
+
     router.push('/dashboard');
   };
 
