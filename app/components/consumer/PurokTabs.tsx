@@ -5,10 +5,10 @@ import { cn } from '@/lib/utils';
 interface PurokTabsProps {
   activePurok: number;
   onPurokChange: (purok: number) => void;
-  // counts: Record<number, number>;
+  counts?: Record<number, number>;
 }
 
-export default function PurokTabs({ activePurok, onPurokChange }: PurokTabsProps) {
+export default function PurokTabs({ activePurok, onPurokChange, counts }: PurokTabsProps) {
   const puroks = Array.from({ length: 8 }, (_, i) => i + 1);
 
   return (

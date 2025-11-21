@@ -1,17 +1,19 @@
 "use client"
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/app/components/ui/Button'
 import { Input } from '@/app/components/ui/Input'
 import { Select } from '@/app/components/ui/Select'
 import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/Card'
 import { ToastContainer, toast } from 'react-toastify'
+import { usersAPI } from '@/lib/api'
 
 const PUROK_OPTIONS = Array.from({ length: 8 }, (_, i) => ({ value: String(i + 1), label: `Purok ${i + 1}` }))
 
 export default function AddConsumerPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     fullName: '',
@@ -24,6 +26,14 @@ export default function AddConsumerPage() {
     email: '',
   })
 
+  // Set purok from URL parameter on component mount
+  useEffect(() => {
+    const purokParam = searchParams.get('purok')
+    if (purokParam && purokParam >= '1' && purokParam <= '8') {
+      setForm(prev => ({ ...prev, purok: purokParam }))
+    }
+  }, [searchParams])
+
   const handleChange = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }))
 
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -32,38 +42,31 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     if (!form.meterNumber.trim()) return toast.error('Meter number is required')
     if (!form.username.trim()) return toast.error('Username is required')
     if (!form.password.trim()) return toast.error('Password is required')
+    if (!form.purok) return toast.error('Purok is required')
 
     setLoading(true)
     try {
         const payload = {
             username: form.username.trim(),
             password: form.password.trim(),
-            role_id: 3, // Client/Consumer
-            purok: form.purok || null,
-            meter_number: form.meterNumber.trim(),
-            full_name: form.fullName.trim(),
+            role_id: 3, // Client/Consumer - static for consumers
             address: form.address.trim() || null,
-            phone: form.phone.trim() || null,
             email: form.email.trim() || null,
+            full_name: form.fullName.trim(),
+            meter_number: form.meterNumber.trim(),
+            phone: form.phone.trim() || null,
+            purok: parseInt(form.purok) || null,
         }
 
-        // Forward data to backend endpoint `POST /api/users`
-        const res = await fetch('/api/users', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        })
-
-        const result = await res.json()
-        if (!res.ok) throw new Error(result?.message || 'Failed to create consumer')
+        // Forward data to backend endpoint using API utility
+        const response = await usersAPI.create(payload)
+        const result = response.data
 
         toast.success('Consumer created successfully')
-        router.push('/consumer')
-    } catch (err: unknown) {
+        router.push(`/consumer?purok=${form.purok}`)
+    } catch (err: any) {
         console.error('Failed to create consumer', err)
-        const message = err instanceof Error ? err.message : 'Failed to create consumer'
+        const message = err?.response?.data?.message || err?.message || 'Failed to create consumer'
         toast.error(message)
     } finally {
         setLoading(false)
@@ -85,8 +88,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                   <Input required value={form.fullName} onChange={(e) => handleChange('fullName', e.target.value)} placeholder="Juan Dela Cruz" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Purok</label>
-                  <Select value={form.purok} onChange={(e) => handleChange('purok', e.target.value)} options={[{ value: '', label: 'Select Purok' }, ...PUROK_OPTIONS]} />
+                  <label className="text-sm font-medium mb-1 block">Purok *</label>
+                  <Select required value={form.purok} onChange={(e) => handleChange('purok', e.target.value)} options={[{ value: '', label: 'Select Purok' }, ...PUROK_OPTIONS]} />
                 </div>
               </div>
 
