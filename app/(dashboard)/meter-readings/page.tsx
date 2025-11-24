@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { meterReadingsAPI } from '@/lib/api';
+import { meterReadingsAPI, usersAPI } from '@/lib/api';
 import { MeterReading } from '@/types';
 import ReadingsTable from '@/app/components/meter-readings/ReadingsTable';
 import ReadingCard from '@/app/components/meter-readings/ReadingCard';
@@ -16,6 +16,7 @@ export default function MeterReadingsPage() {
   const router = useRouter();
   const [readings, setReadings] = useState<MeterReading[]>([]);
   const [loading, setLoading] = useState(true);
+  const [consumersMap, setConsumersMap] = useState<Map<number, string>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
@@ -26,8 +27,20 @@ export default function MeterReadingsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
-    const fetchMeterReadings = async () => {
+    const fetchData = async () => {
       try {
+        // First, fetch consumers to build the map
+        const consumersResponse = await usersAPI.getConsumers();
+        const consumersData = consumersResponse.data;
+        const consumersList = Array.isArray(consumersData) ? consumersData : [];
+        const map = new Map<number, string>();
+        for (const consumer of consumersList) {
+          const name = consumer.full_name || consumer.username || `Consumer ${consumer.id}`;
+          map.set(Number(consumer.id), name);
+        }
+        setConsumersMap(map);
+
+        // Then fetch meter readings
         const response = await meterReadingsAPI.getAll();
 
         // Normalize different possible response shapes from the backend.
@@ -64,11 +77,14 @@ export default function MeterReadingsPage() {
               readingDate = reading.reading_date;
             }
 
+            const consumerId = Number(reading.user_id) || 0;
+            const consumerName = map.get(consumerId) || reading.user?.full_name || reading.user?.username || `Consumer ${consumerId}`;
+
             const processedReading: MeterReading = {
               id: Number(reading.id) || 0,
-              consumer_id: Number(reading.user_id) || 0, // API uses user_id
+              consumer_id: consumerId,
               reader_id: 0, // Not provided by API, default to 0
-              consumer_name: reading.user?.full_name || reading.user?.username || `User ${reading.user_id}`,
+              consumer_name: consumerName,
               reader_name: 'System', // Not provided by API
               reading_value: readingValue,
               photo_url: reading.image_url ? String(reading.image_url) : undefined, // API uses image_url
@@ -86,13 +102,13 @@ export default function MeterReadingsPage() {
 
         setReadings(processedList);
       } catch (error) {
-        console.error('Failed to fetch meter readings:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMeterReadings();
+    fetchData();
   }, []);
 
   // Filter readings
