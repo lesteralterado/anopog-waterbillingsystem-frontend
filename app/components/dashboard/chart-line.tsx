@@ -41,7 +41,7 @@ export function ChartLineDefault() {
     <Card>
       <CardHeader>
         <CardTitle>Consumption</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardDescription>July - December 2025</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-40 w-full">
