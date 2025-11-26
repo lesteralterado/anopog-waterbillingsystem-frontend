@@ -1,16 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { usersAPI } from '@/lib/api';
 import { User } from '@/types';
 import { Loading } from '@/app/components/ui/Loading';
 import { Button } from '@/app/components/ui/Button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function ConsumerDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const [consumer, setConsumer] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,21 @@ export default function ConsumerDetailPage() {
     }
   }, [id]);
 
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this consumer? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await usersAPI.remove(id);
+      toast.success('Consumer deleted successfully');
+      router.push('/consumer');
+    } catch (error) {
+      console.error('Failed to delete consumer:', error);
+      toast.error('Failed to delete consumer');
+    }
+  };
+
   if (loading) return <Loading />;
 
   if (!consumer) {
@@ -62,14 +79,28 @@ export default function ConsumerDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/consumer">
-          <Button variant="outline">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Consumers
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/consumer">
+            <Button variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Consumers
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-900">Consumer Details</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href={`/consumer/${id}/edit`}>
+            <Button variant="outline">
+              <Edit className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+          </Link>
+          <Button variant="destructive" onClick={handleDelete}>
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete
           </Button>
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Consumer Details</h1>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -119,6 +150,7 @@ export default function ConsumerDetailPage() {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

@@ -26,12 +26,50 @@ export default function AddConsumerPage() {
     email: '',
   })
 
-  // Set purok from URL parameter on component mount
+  // Generate next meter number
+  const generateMeterNumber = async () => {
+    try {
+      const currentYear = new Date().getFullYear()
+      const response = await usersAPI.getConsumers()
+      const consumers = response.data
+
+      // Filter consumers with meter numbers for current year
+      const yearConsumers = consumers.filter((c: any) =>
+        c.meter_number && c.meter_number.startsWith(`WM-${currentYear}-`)
+      )
+
+      // Extract sequential numbers
+      const numbers = yearConsumers
+        .map((c: any) => {
+          const parts = c.meter_number.split('-')
+          const num = parseInt(parts[2])
+          return isNaN(num) ? null : num
+        })
+        .filter((n: number | null) => n !== null)
+
+      // Find next number
+      const maxNum = numbers.length > 0 ? Math.max(...numbers) : 0
+      const nextNum = maxNum + 1
+
+      const meterNumber = `WM-${currentYear}-${nextNum}`
+      setForm(prev => ({ ...prev, meterNumber }))
+    } catch (error) {
+      console.error('Failed to generate meter number:', error)
+      // Fallback: generate with current timestamp or something
+      const currentYear = new Date().getFullYear()
+      const timestamp = Date.now()
+      const meterNumber = `WM-${currentYear}-${timestamp.toString().slice(-3)}`
+      setForm(prev => ({ ...prev, meterNumber }))
+    }
+  }
+
+  // Set purok from URL parameter and generate meter number on component mount
   useEffect(() => {
     const purokParam = searchParams.get('purok')
     if (purokParam && purokParam >= '1' && purokParam <= '8') {
       setForm(prev => ({ ...prev, purok: purokParam }))
     }
+    generateMeterNumber()
   }, [searchParams])
 
   const handleChange = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }))
@@ -39,7 +77,6 @@ export default function AddConsumerPage() {
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!form.fullName.trim()) return toast.error('Full name is required')
-    if (!form.meterNumber.trim()) return toast.error('Meter number is required')
     if (!form.username.trim()) return toast.error('Username is required')
     if (!form.password.trim()) return toast.error('Password is required')
     if (!form.purok) return toast.error('Purok is required')
@@ -117,8 +154,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Meter Number *</label>
-                  <Input required value={form.meterNumber} onChange={(e) => handleChange('meterNumber', e.target.value)} placeholder="WM-2025-001" />
+                  <label className="text-sm font-medium mb-1 block">Meter Number (Auto-generated)</label>
+                  <Input disabled value={form.meterNumber} placeholder="WM-2025-001" />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Address</label>
