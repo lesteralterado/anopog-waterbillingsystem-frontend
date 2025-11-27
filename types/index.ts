@@ -66,6 +66,19 @@ export interface Incident {
   resolved_date?: string;
 }
 
+export interface MeterReadingAPI {
+  id: string;
+  user_id: string;
+  reading_date: any;
+  reading_value: {
+    s: number;
+    e: number;
+    d: number[];
+  };
+  image_url: string | null;
+  user: any;
+}
+
 export interface DashboardStats {
   totalBills: string;
   unpaidBills: string;

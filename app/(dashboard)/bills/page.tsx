@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { billsAPI, usersAPI } from '@/lib/api';
-import { Bill, User } from '@/types';
+import { Bill, User, MeterReadingAPI } from '@/types';
 import BillsTable from '@/app/components/bills/BillsTable';
 import { Button } from '@/app/components/ui/Button';
+import Pagination from '@/app/components/shared/Pagination';
 import {
   Dialog,
   DialogContent,
@@ -21,64 +22,73 @@ export default function BillsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Consumers state and loader
   const [consumers, setConsumers] = useState<User[]>([]);
 
   useEffect(() => {
-    const fetchConsumers = async () => {
+    const fetchData = async () => {
       try {
-        const res = await usersAPI.getConsumers();
-        const data = res.data;
-        const list: User[] = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.users)
-          ? data.users
-          : Array.isArray(data?.data)
-          ? data.data
+        // Fetch consumers
+        const consumersRes = await usersAPI.getConsumers();
+        const consumersData = consumersRes.data;
+        const consumersList: User[] = Array.isArray(consumersData)
+          ? consumersData
+          : Array.isArray(consumersData?.users)
+          ? consumersData.users
+          : Array.isArray(consumersData?.data)
+          ? consumersData.data
           : [];
 
-        if (!Array.isArray(list)) {
-          console.error('Unexpected consumers response shape:', res.data);
+        if (!Array.isArray(consumersList)) {
+          console.error('Unexpected consumers response shape:', consumersRes.data);
         }
 
-        setConsumers(list);
-      } catch (err) {
-        console.error('Failed to fetch consumers', err);
-      }
-    };
+        setConsumers(consumersList);
 
-    fetchConsumers();
-  }, []);
+        // Fetch bills from the specific endpoint
+        const billsRes = await axios.get('https://anopog-waterbillingsystem-backend.onrender.com/api/billing');
+        const billsData = billsRes.data;
+        const billsList = billsData.bills || [];
 
-  useEffect(() => {
-    const fetchBills = async () => {
-      try {
-        const response = await billsAPI.getAll();
-        // Normalize different possible response shapes from the backend.
-        // Some APIs return an array directly, others wrap it: { bills: [...] } or { data: [...] }
-        const data = response.data;
-        const list: Bill[] = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.bills)
-          ? data.bills
-          : Array.isArray(data?.data)
-          ? data.data
-          : [];
+        // Fetch meter readings
+        const meterReadingsRes = await axios.get('https://anopog-waterbillingsystem-backend.onrender.com/api/meter-readings');
+        const meterReadingsData = meterReadingsRes.data;
+        const meterReadingsList: MeterReadingAPI[] = meterReadingsData.meterReadings || [];
 
-        if (!Array.isArray(list)) {
-          console.error('Unexpected bills response shape:', response.data);
-        }
+        // Transform bills to match Bill interface
+        const transformedBills: Bill[] = billsList.map((bill: any) => {
+          const consumer = consumersList.find(c => c.id === bill.user_id.toString());
+          const meterReading = meterReadingsList.find(mr => mr.user_id === bill.user_id.toString());
+          const consumption = meterReading ? meterReading.reading_value.d[0] || 0 : 0;
 
-        setBills(list);
+          return {
+            id: bill.id,
+            consumer_id: bill.user_id,
+            consumer_name: consumer?.full_name || consumer?.username || '',
+            consumer_email: consumer?.email || '',
+            amount: bill.amount_due,
+            previous_reading: 0,
+            current_reading: consumption,
+            consumption: consumption,
+            due_date: bill.due_date || '',
+            status: bill.is_paid ? 'paid' : 'unpaid',
+            reading_date: '',
+            created_at: '',
+          };
+        });
+
+        setBills(transformedBills);
       } catch (error) {
-        console.error('Failed to fetch bills:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBills();
+    fetchData();
   }, []);
 
   const filteredBills = bills.filter((bill) =>
@@ -86,6 +96,17 @@ export default function BillsPage() {
     bill.consumer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     bill.id.toString().includes(searchTerm)
   );
+
+  // Pagination logic
+  const totalFilteredBills = filteredBills.length;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedBills = filteredBills.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   if (loading) return <Loading />;
 
@@ -119,7 +140,17 @@ export default function BillsPage() {
 
       {/* Bills Table */}
       {filteredBills.length > 0 ? (
-        <BillsTable bills={filteredBills} />
+        <>
+          <BillsTable bills={paginatedBills} />
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalFilteredBills}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            itemsPerPageOptions={[10, 15, 20]}
+          />
+        </>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <p className="text-gray-500">No bills found</p>
@@ -206,18 +237,6 @@ export default function BillsPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Consumers List (for debugging) */}
-      <div className="mt-10">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Consumers ({consumers.length})</h2>
-        <ul className="space-y-2">
-          {consumers.map((c) => (
-            <li key={c.id} className="text-gray-700">
-              {c.full_name ?? c.username ?? c.email}
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
