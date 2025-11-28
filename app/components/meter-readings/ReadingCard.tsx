@@ -25,7 +25,7 @@ export default function ReadingCard({ reading, onViewPhoto }: ReadingCardProps) 
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <div className="space-y-4">
+      <div className="space-y-4 p-4">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>

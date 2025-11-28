@@ -33,6 +33,7 @@ import { Badge } from '@/app/components/ui/Badge'
 import { UserPlus, Search, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import { ToastContainer, toast } from 'react-toastify';
 import api, { usersAPI } from '@/lib/api'
+import Pagination from '@/app/components/shared/Pagination'
 
 // Toast message constants for better maintainability
 const TOAST_MESSAGES = {
@@ -64,6 +65,10 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -228,6 +233,27 @@ export default function UsersPage() {
     user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.role.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1)
+  }
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery])
+
+  // Calculate paginated users
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   )
 
   // Memoize filtered users for performance optimization
@@ -570,7 +596,7 @@ export default function UsersPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  memoizedFilteredUsers.map((user) => (
+                  paginatedUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.fullName}</TableCell>
                       <TableCell>{user.username}</TableCell>
@@ -613,6 +639,13 @@ export default function UsersPage() {
               </TableBody>
             </Table>
           </div>
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredUsers.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
         </CardContent>
       </Card>
     </div>

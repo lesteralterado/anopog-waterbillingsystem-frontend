@@ -32,13 +32,14 @@ const fetchConsumers = async () => {
   }
 };
 
-const ITEMS_PER_PAGE = 10;
+const DEFAULT_ITEMS_PER_PAGE = 10;
 
 export default function ConsumerPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [consumers, setConsumers] = useState<Consumer[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE);
   const [filters, setFilters] = useState({
     purok: 1,
     status: null as string | null,
@@ -115,14 +116,19 @@ export default function ConsumerPage() {
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredConsumers.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredConsumers.length / itemsPerPage);
   const paginatedConsumers = filteredConsumers.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
   };
 
   const handlePurokChange = (purok: number) => {
@@ -180,8 +186,10 @@ export default function ConsumerPage() {
         <ConsumersTable
           consumers={paginatedConsumers}
           currentPage={currentPage}
-          totalPages={totalPages}
+          totalItems={filteredConsumers.length}
+          itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">

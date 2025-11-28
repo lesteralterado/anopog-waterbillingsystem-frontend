@@ -6,15 +6,18 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Badge } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { Eye } from 'lucide-react';
+import Pagination from '@/app/components/shared/Pagination';
 
 interface ConsumersTableProps {
   consumers: Consumer[];
   currentPage: number;
-  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
   onPageChange: (page: number) => void;
+  onItemsPerPageChange: (itemsPerPage: number) => void;
 }
 
-export default function ConsumersTable({ consumers, currentPage, totalPages, onPageChange }: ConsumersTableProps) {
+export default function ConsumersTable({ consumers, currentPage, totalItems, itemsPerPage, onPageChange, onItemsPerPageChange }: ConsumersTableProps) {
   const router = useRouter();
 
   return (
@@ -53,21 +56,13 @@ export default function ConsumersTable({ consumers, currentPage, totalPages, onP
         </TableBody>
       </Table>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
-          <Button variant="outline" size="sm" onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>
-            Previous
-          </Button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <Button key={i} variant={currentPage === i + 1 ? 'default' : 'outline'} size="sm" onClick={() => onPageChange(i + 1)}>
-              {i + 1}
-            </Button>
-          ))}
-          <Button variant="outline" size="sm" onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>
-            Next
-          </Button>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={onPageChange}
+        onItemsPerPageChange={onItemsPerPageChange}
+      />
     </div>
   );
 }

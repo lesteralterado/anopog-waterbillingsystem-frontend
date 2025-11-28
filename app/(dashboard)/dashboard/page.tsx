@@ -11,13 +11,13 @@ import { Button } from '@/app/components/ui/Button';
 import { Users, DollarSign, TrendingUp, CheckCircle, Clock, FileText, CreditCard } from 'lucide-react';
 // import AdminSidebar from '@/app/components/AdminSidebar';
 import { ChartLineDefault as ChartLine } from '@/app/components/dashboard/chart-line';
-import { usersAPI } from '@/lib/api';
+import { usersAPI, paymentsAPI, billsAPI } from '@/lib/api';
 
 interface DashboardStats {
   totalConsumers: number;
   pendingBills: number;
   paidBills: number;
-  totalRevenue: number;
+  monthlyRevenue: number;
 }
 
 interface RecentBill {
@@ -39,7 +39,7 @@ export default function WaterBillingDashboard() {
      totalConsumers: 0,
      pendingBills: 0,
      paidBills: 0,
-     totalRevenue: 0
+     monthlyRevenue: 0
    });
    const [recentBills, setRecentBills] = useState<RecentBill[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -59,7 +59,59 @@ export default function WaterBillingDashboard() {
       }
     };
 
+    const loadDashboardStats = async () => {
+      try {
+        // Calculate stats from available APIs since dashboard/stats endpoint doesn't exist
+
+        // Get bills to calculate pending/paid counts
+        let pendingBills = 0;
+        let paidBills = 0;
+        try {
+          const billsRes = await billsAPI.getAll();
+          const bills = billsRes?.data ?? [];
+          const billsArray = Array.isArray(bills) ? bills : [];
+
+          pendingBills = billsArray.filter((bill: any) => bill.status === 'pending').length;
+          paidBills = billsArray.filter((bill: any) => bill.status === 'paid').length;
+        } catch (billsErr) {
+          console.warn('Failed to load bills data, using defaults:', billsErr);
+        }
+
+        // Calculate monthly revenue from payments
+        let monthlyRevenue = 0;
+        try {
+          const paymentsRes = await paymentsAPI.getAll();
+          const payments = paymentsRes?.data ?? [];
+          const paymentsArray = Array.isArray(payments) ? payments : [];
+
+          const currentDate = new Date();
+          const currentMonth = currentDate.getMonth();
+          const currentYear = currentDate.getFullYear();
+
+          monthlyRevenue = paymentsArray
+            .filter((payment: any) => {
+              const paymentDate = new Date(payment.created_at || payment.date);
+              return paymentDate.getMonth() === currentMonth &&
+                     paymentDate.getFullYear() === currentYear;
+            })
+            .reduce((total: number, payment: any) => total + (payment.amount || 0), 0);
+        } catch (paymentsErr) {
+          console.warn('Failed to load payments data, using 0 for revenue:', paymentsErr);
+        }
+
+        setStats((prev) => ({
+          ...prev,
+          pendingBills,
+          paidBills,
+          monthlyRevenue
+        }));
+      } catch (err) {
+        console.error('Failed to load dashboard stats:', err);
+      }
+    };
+
     loadConsumers();
+    loadDashboardStats();
   }, []);
 
   return (
@@ -122,13 +174,13 @@ export default function WaterBillingDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₱{stats.totalRevenue.toFixed(2)}</div>
+                <div className="text-2xl font-bold">₱{stats.monthlyRevenue.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground">
-                  From paid bills
+                  This month
                 </p>
               </CardContent>
             </Card>
