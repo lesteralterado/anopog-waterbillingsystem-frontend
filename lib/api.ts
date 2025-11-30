@@ -45,10 +45,10 @@ export const meterReadingsAPI = {
 };
 
 export const incidentsAPI = {
-  getAll: () => api.get('/api/incidents'),
-  create: (data: unknown) => api.post('/api/incidents', data),
+  getAll: () => api.get('/api/issues'),
+  create: (data: unknown) => api.post('/api/issues', data),
   updateStatus: (id: number, status: string) =>
-    api.patch(`/api/incidents/${id}`, { status }),
+    api.patch(`/api/issues/${id}`, { status }),
 };
 
 export const usersAPI = {
@@ -95,6 +95,10 @@ export const usersAPI = {
 
 export const dashboardAPI = {
   getStats: () => api.get('/api/dashboard/stats'),
+};
+
+export const notificationsAPI = {
+  registerDeviceToken: (token: string) => api.post('/api/register-device-token', { token }),
 };
 
 export default api;

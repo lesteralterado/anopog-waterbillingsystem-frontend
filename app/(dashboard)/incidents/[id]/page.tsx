@@ -43,11 +43,15 @@ export default function IncidentDetailPage() {
 		const fetchIncident = async () => {
 			setLoading(true)
 			try {
-				const res = await api.get(`/api/incidents/${id}`)
+				console.log(`Fetching incident with ID: ${id}`)
+				const res = await api.get(`/api/issues/${id}`)
+				console.log('API response:', res)
 				const data = res.data?.incident ?? res.data ?? null
+				console.log('Parsed incident data:', data)
 				setIncident(data)
 			} catch (err: any) {
 				console.error('Failed to load incident', err)
+				console.error('Error response:', err?.response)
 				setError(err?.response?.data?.message || 'Failed to load incident')
 			} finally {
 				setLoading(false)
@@ -65,7 +69,7 @@ export default function IncidentDetailPage() {
 			if (incidentsAPI && incidentsAPI.updateStatus) {
 				await incidentsAPI.updateStatus(incident.id ?? id, newStatus)
 			} else {
-				await api.patch(`/api/incidents/${incident.id ?? id}`, { status: newStatus })
+				await api.patch(`/api/issues/${incident.id ?? id}`, { status: newStatus })
 			}
 			setIncident({ ...incident, status: newStatus })
 			toast.success('Status updated')
@@ -83,7 +87,7 @@ export default function IncidentDetailPage() {
 		setAddingComment(true)
 		try {
 			// attempt to post comment if backend supports it
-			await api.post(`/api/incidents/${id}/comments`, { text: commentText.trim() })
+			await api.post(`/api/issues/${id}/comments`, { text: commentText.trim() })
 			// optimistic update
 			const newComment = {
 				id: Date.now(),

@@ -3,13 +3,27 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Badge } from '@/app/components/ui/Badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Eye } from 'lucide-react';
+import Pagination from '@/app/components/shared/Pagination';
 
 interface PaymentsTableProps {
   payments: Payment[];
+  currentPage: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange: (itemsPerPage: number) => void;
 }
 
-export default function PaymentsTable({ payments }: PaymentsTableProps) {
-  const getStatusVariant = (status: string) => {
+export default function PaymentsTable({
+  payments,
+  currentPage,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+  onItemsPerPageChange
+}: PaymentsTableProps) {
+  const getStatusVariant = (status: string | undefined) => {
+    if (!status) return 'default';
     switch (status.toLowerCase()) {
       case 'completed':
       case 'success':
@@ -50,13 +64,13 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
                   <p className="font-medium">{payment.consumer_name || 'N/A'}</p>
                 </div>
               </TableCell>
-              <TableCell className="font-semibold">{formatCurrency(payment.amount)}</TableCell>
-              <TableCell className="capitalize">{payment.payment_method}</TableCell>
-              <TableCell className="font-mono text-sm">{payment.transaction_id}</TableCell>
-              <TableCell>{formatDate(payment.payment_date)}</TableCell>
+              <TableCell className="font-semibold">{formatCurrency(payment.amount || 0)}</TableCell>
+              <TableCell className="capitalize">{payment.payment_method || 'N/A'}</TableCell>
+              <TableCell className="font-mono text-sm">{payment.transaction_id || 'N/A'}</TableCell>
+              <TableCell>{formatDate(payment.payment_date || '')}</TableCell>
               <TableCell>
                 <Badge variant={getStatusVariant(payment.status)}>
-                  {payment.status.toUpperCase()}
+                  {(payment.status || 'Unknown').toUpperCase()}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -68,6 +82,14 @@ export default function PaymentsTable({ payments }: PaymentsTableProps) {
           ))}
         </TableBody>
       </Table>
+
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={onPageChange}
+        onItemsPerPageChange={onItemsPerPageChange}
+      />
     </div>
   );
 }

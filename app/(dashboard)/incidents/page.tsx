@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import api from '@/lib/api'
+import { useRouter } from 'next/navigation'
+import { incidentsAPI } from '@/lib/api'
 import { Button } from '@/app/components/ui/Button'
 import {
   Card,
@@ -11,35 +11,36 @@ import {
   CardContent,
 } from '@/app/components/ui/Card'
 import { Loading } from '@/app/components/ui/Loading'
+import { Badge } from '@/app/components/ui/Badge'
 
-export default function IncidentPage() {
-  const params = useParams()
+export default function IncidentsPage() {
   const router = useRouter()
-  const id = params?.id
 
-  const [incident, setIncident] = useState<any>(null)
+  const [incidents, setIncidents] = useState<any[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string>('')
 
   useEffect(() => {
-    if (!id) return
-
-    const fetchIncident = async () => {
+    const fetchIncidents = async () => {
       setLoading(true)
       try {
-        const res = await api.get(`/api/incidents/${id}`)
-        // Support different response shapes
-        const data = res.data?.incident ?? res.data ?? null
-        setIncident(data)
+        console.log('Fetching all incidents/issues')
+        const res = await incidentsAPI.getAll()
+        console.log('Incidents API response:', res)
+        const data = res.data?.incidents ?? res.data?.issues ?? res.data ?? []
+        console.log('Parsed incidents data:', data)
+        setIncidents(Array.isArray(data) ? data : [])
       } catch (err: any) {
-        setError(err?.response?.data?.message || err?.message || 'Failed to load incident')
+        console.error('Failed to load incidents', err)
+        console.error('Error response:', err?.response)
+        setError(err?.response?.data?.message || 'Failed to load incidents')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchIncident()
-  }, [id])
+    fetchIncidents()
+  }, [])
 
   if (loading) {
     return (
@@ -51,39 +52,32 @@ export default function IncidentPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-4 flex items-center gap-3">
-        <Button variant="ghost" onClick={() => router.back()}>
-          Back
-        </Button>
-        <h1 className="text-2xl font-bold">Incident Details</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Issues</h1>
       </div>
 
       {error && <div className="text-red-600 mb-4">{error}</div>}
 
-      {!incident && !error && <div>No incident found.</div>}
+      {!incidents.length && !error && <div>No issues reported yet.</div>}
 
-      {incident && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{incident.title || `Incident #${incident.id ?? id}`}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-2">
-              Status: <strong>{incident.status ?? 'N/A'}</strong>
-            </p>
-
-            {incident.description || incident.details ? (
-              <p className="mb-4">{incident.description ?? incident.details}</p>
-            ) : (
-              <pre className="mb-4 text-sm bg-gray-50 p-3 rounded">{JSON.stringify(incident, null, 2)}</pre>
-            )}
-
-            <div className="text-xs text-gray-500">
-              Reported: {incident.createdAt ?? incident.created_at ?? incident.date ?? '—'}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="grid gap-4">
+        {incidents.map((incident: any) => (
+          <Card key={incident.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push(`/incidents/${incident.id}`)}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">{incident.title ?? `Issue #${incident.id}`}</CardTitle>
+                <Badge>{incident.status ?? 'Open'}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-2">{incident.description ?? incident.details ?? 'No description'}</p>
+              <div className="text-xs text-gray-500">
+                Reported: {new Date(incident.created_at ?? incident.createdAt ?? Date.now()).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

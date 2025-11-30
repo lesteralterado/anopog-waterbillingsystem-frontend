@@ -98,7 +98,10 @@ export default function MeterReadingsPage() {
           }
         }
 
-        // console.log('Processed list:', processedList);
+        // Sort by reading_date descending (newest first)
+        processedList.sort((a, b) => new Date(b.reading_date).getTime() - new Date(a.reading_date).getTime());
+
+        // console.log('Processed and sorted list:', processedList);
 
         setReadings(processedList);
       } catch (error) {
