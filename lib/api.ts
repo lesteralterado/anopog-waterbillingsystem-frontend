@@ -51,7 +51,7 @@ export const authAPI = {
 };
 
 export const billsAPI = {
-  getAll: () => api.get('/api/bills'),
+  getAll: () => api.get('/api/billing'),
   getMyBills: () => api.get('/api/bills/my-bills'),
   create: (data: unknown) => api.post('/api/bills', data),
 };
@@ -85,38 +85,33 @@ export const usersAPI = {
   getAll: () => api.get('/api/users'),
   // Try a dedicated consumers endpoint first, fall back to fetching all users and filtering by role name or role_id.
   getConsumers: async () => {
-    try {
-      // Some backends expose /api/users/consumers
-      return await api.get('/api/users/consumers');
-    } catch {
-      // Fallback: fetch all users and filter client-side for role === 'Consumer'
-      const res = await api.get('/api/users');
-      const data = res.data;
-      // Normalize possible response shapes: array, { users: [...] }, { data: [...] }
-      const list: Record<string, unknown>[] = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.users)
-        ? data.users
-        : Array.isArray(data?.data)
-        ? data.data
-        : [];
+    // Fetch all users and filter client-side for role === 'Consumer'
+    const res = await api.get('/api/users');
+    const data = res.data;
+    // Normalize possible response shapes: array, { users: [...] }, { data: [...] }
+    const list: Record<string, unknown>[] = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.users)
+      ? data.users
+      : Array.isArray(data?.data)
+      ? data.data
+      : [];
 
-      const consumers = list.filter((u: Record<string, unknown>) => {
-        const roleName = (u?.role as Record<string, unknown>)?.name ?? u?.role_name ?? null;
-        const roleId = u?.role_id ?? (u?.role as Record<string, unknown>)?.id ?? null;
-        return (
-          (typeof roleName === 'string' && roleName.toLowerCase() === 'consumer') ||
-          roleId === '3' ||
-          roleId === 3
-        );
-      });
+    const consumers = list.filter((u: Record<string, unknown>) => {
+      const roleName = (u?.role as Record<string, unknown>)?.name ?? u?.role_name ?? null;
+      const roleId = u?.role_id ?? (u?.role as Record<string, unknown>)?.id ?? null;
+      return (
+        (typeof roleName === 'string' && roleName.toLowerCase() === 'consumer') ||
+        roleId === '3' ||
+        roleId === 3
+      );
+    });
 
-      // Return an object shaped like a minimal axios response with `data` containing the consumers array.
-      return {
-        ...res,
-        data: consumers,
-      };
-    }
+    // Return an object shaped like a minimal axios response with `data` containing the consumers array.
+    return {
+      ...res,
+      data: consumers,
+    };
   },
   create: (data: unknown) => api.post('/api/users', data),
   update: (id: number | string, data: unknown) => api.put(`/api/users/${id}`, data),

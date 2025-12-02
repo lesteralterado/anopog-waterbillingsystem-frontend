@@ -34,7 +34,7 @@ export default function EditConsumerPage() {
     const fetchConsumer = async () => {
       try {
         const response = await usersAPI.getConsumers()
-        const data = response.data
+        const data = response.data as any
         const list: User[] = Array.isArray(data)
           ? data
           : Array.isArray(data?.users)

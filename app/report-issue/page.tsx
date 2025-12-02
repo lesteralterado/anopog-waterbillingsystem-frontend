@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { incidentsAPI } from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/app/components/ui/Button'
 import {
   Card,
@@ -16,6 +17,7 @@ import { Loading } from '@/app/components/ui/Loading'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function ReportIssuePage() {
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -28,10 +30,18 @@ export default function ReportIssuePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user) {
+      setError('User not authenticated')
+      return
+    }
     setLoading(true)
     setError('')
     try {
-      await incidentsAPI.create(formData)
+      const issueData = {
+        userId: user.id,
+        description: formData.description,
+      }
+      await incidentsAPI.create(issueData)
       setSuccess(true)
       setFormData({
         title: '',

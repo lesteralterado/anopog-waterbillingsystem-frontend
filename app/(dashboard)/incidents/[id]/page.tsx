@@ -56,10 +56,19 @@ export default function IncidentDetailPage() {
 				if (foundIncident) {
 					const existingFixingDate = foundIncident.fixing_date
 					if (existingFixingDate) {
-						setFixingDate(new Date(existingFixingDate).toISOString().split('T')[0])
+						try {
+							setFixingDate(new Date(existingFixingDate).toISOString().split('T')[0])
+						} catch {
+							setFixingDate('')
+						}
 					} else {
-						const calculatedDueDate = new Date(new Date(foundIncident.created_at ?? foundIncident.createdAt ?? Date.now()).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-						setFixingDate(calculatedDueDate)
+						try {
+							const createdDate = new Date(foundIncident.created_at ?? foundIncident.createdAt ?? Date.now())
+							const calculatedDueDate = new Date(createdDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+							setFixingDate(calculatedDueDate)
+						} catch {
+							setFixingDate('')
+						}
 					}
 				}
 			} catch (err: any) {
@@ -98,7 +107,8 @@ export default function IncidentDetailPage() {
 		if (!incident || !fixingDate) return
 		try {
 			setLoading(true)
-			await incidentsAPI.scheduleFix(incident.id ?? id, fixingDate)
+			const fixingDateISO = new Date(fixingDate).toISOString()
+			await incidentsAPI.scheduleFix(incident.id ?? id, fixingDateISO)
 			setIncident({ ...incident, fixing_date: fixingDate })
 			toast.success('Fix scheduled successfully. Consumer has been notified of the fixing date.')
 		} catch (err: any) {
@@ -127,9 +137,18 @@ export default function IncidentDetailPage() {
 
 	const handleSendReminder = async () => {
 		if (!incident) return
+		const userId = incident.reporter_id ?? incident.consumer_id ?? incident.user_id
+		if (!userId) {
+			toast.error('Cannot send reminder: Consumer ID not found')
+			return
+		}
 		try {
 			setLoading(true)
-			await incidentsAPI.sendResolutionReminder(incident.id ?? id)
+			const reminderData = {
+				userId,
+				description: `Resolution reminder: Your reported issue #${incident.id} is being resolved. Please check for updates.`,
+			}
+			await incidentsAPI.create(reminderData)
 			toast.success('Resolution reminder sent to consumer')
 		} catch (err: any) {
 			console.error('Failed to send reminder', err)
@@ -138,6 +157,7 @@ export default function IncidentDetailPage() {
 			setLoading(false)
 		}
 	}
+
 
 	const handleAddComment = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -208,9 +228,7 @@ export default function IncidentDetailPage() {
 								<Button variant="outline" onClick={() => handleChangeStatus('In Progress')}>
 									<Clock className="mr-2 h-4 w-4" /> Mark In Progress
 								</Button>
-								<Button variant="outline" onClick={handleSendReminder}>
-									<MessageSquare className="mr-2 h-4 w-4" /> Send Resolution Reminder
-								</Button>
+								
 								<Button onClick={handleResolveIssue}>
 									<CheckCircle className="mr-2 h-4 w-4" /> Mark Resolved
 								</Button>
@@ -235,7 +253,13 @@ export default function IncidentDetailPage() {
 								{(incident.comments || []).map((c: any) => (
 									<div key={c.id} className="border rounded p-3">
 										<div className="text-sm text-gray-700">{c.text}</div>
-										<div className="text-xs text-gray-400 mt-2">{c.author ?? 'Unknown'} • {new Date(c.created_at ?? c.createdAt ?? Date.now()).toLocaleString()}</div>
+										<div className="text-xs text-gray-400 mt-2">{c.author ?? 'Unknown'} • {(() => {
+											try {
+												return new Date(c.created_at ?? c.createdAt ?? Date.now()).toLocaleString()
+											} catch {
+												return 'Invalid date'
+											}
+										})()}</div>
 									</div>
 								))}
 							</div>
@@ -251,7 +275,13 @@ export default function IncidentDetailPage() {
 						<CardContent>
 							<div className="text-sm text-gray-700 space-y-2">
 								<div><strong>Reported by:</strong> {incident.reported_by ?? incident.reporter ?? '—'}</div>
-								<div><strong>Date:</strong> {new Date(incident.created_at ?? incident.createdAt ?? Date.now()).toLocaleString()}</div>
+								<div><strong>Date:</strong> {(() => {
+									try {
+										return new Date(incident.created_at ?? incident.createdAt ?? Date.now()).toLocaleString()
+									} catch {
+										return 'Invalid date'
+									}
+								})()}</div>
 								<div>
 									<label className="block text-sm font-medium text-gray-700">Fixing Date</label>
 									<div className="flex gap-2">
@@ -264,10 +294,25 @@ export default function IncidentDetailPage() {
 										<Button onClick={handleScheduleFix} size="sm">Schedule Fix</Button>
 									</div>
 								</div>
-								{incident.fixing_date && <div><strong>Scheduled Fixing Date:</strong> {new Date(incident.fixing_date).toLocaleDateString()}</div>}
-								{incident.resolved_date && <div><strong>Resolved Date:</strong> {new Date(incident.resolved_date).toLocaleDateString()}</div>}
+								{incident.fixing_date && <div><strong>Scheduled Fixing Date:</strong> {(() => {
+									try {
+										return new Date(incident.fixing_date).toLocaleDateString()
+									} catch {
+										return 'Invalid date'
+									}
+								})()}</div>}
+								{incident.resolved_date && <div><strong>Resolved Date:</strong> {(() => {
+									try {
+										return new Date(incident.resolved_date).toLocaleDateString()
+									} catch {
+										return 'Invalid date'
+									}
+								})()}</div>}
 								<div><strong>Priority:</strong> {incident.priority ?? 'Normal'}</div>
 								<div><strong>Contact:</strong> {incident.contact ?? '—'}</div>
+								<Button variant="outline" onClick={handleSendReminder}>
+									<MessageSquare className="mr-2 h-4 w-4" /> Send Resolution Reminder
+								</Button>
 							</div>
 						</CardContent>
 					</Card>

@@ -28,7 +28,12 @@ export default function IncidentsPage() {
         console.log('Incidents API response:', res)
         const data = res.data?.incidents ?? res.data?.issues ?? res.data ?? []
         console.log('Parsed incidents data:', data)
-        setIncidents(Array.isArray(data) ? data : [])
+        const sortedData = Array.isArray(data) ? data.sort((a: any, b: any) => {
+          const dateA = new Date(a.created_at ?? a.createdAt ?? 0)
+          const dateB = new Date(b.created_at ?? b.createdAt ?? 0)
+          return dateB.getTime() - dateA.getTime()
+        }) : []
+        setIncidents(sortedData)
       } catch (err: any) {
         console.error('Failed to load incidents', err)
         console.error('Error response:', err?.response)
@@ -65,7 +70,16 @@ export default function IncidentsPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{incident.title ?? `Issue #${incident.id}`}</CardTitle>
-                <Badge>{incident.status ?? 'Open'}</Badge>
+                <Badge variant={
+                  incident.status === 'resolved' ? 'default' :
+                  incident.status === 'in-progress' ? 'secondary' :
+                  'destructive'
+                }>
+                  {incident.status === 'resolved' ? 'Resolved' :
+                   incident.status === 'in-progress' ? 'In Progress' :
+                   incident.status === 'pending' ? 'Pending' :
+                   'Open'}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>

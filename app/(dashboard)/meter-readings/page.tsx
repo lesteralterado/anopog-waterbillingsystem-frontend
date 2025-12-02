@@ -32,7 +32,7 @@ export default function MeterReadingsPage() {
         // First, fetch consumers to build the map
         const consumersResponse = await usersAPI.getConsumers();
         const consumersData = consumersResponse.data;
-        const consumersList = Array.isArray(consumersData) ? consumersData : [];
+        const consumersList: any[] = Array.isArray(consumersData) ? consumersData : [];
         const map = new Map<number, string>();
         for (const consumer of consumersList) {
           const name = consumer.full_name || consumer.username || `Consumer ${consumer.id}`;

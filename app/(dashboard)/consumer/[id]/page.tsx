@@ -23,7 +23,7 @@ export default function ConsumerDetailPage() {
     const fetchConsumer = async () => {
       try {
         const response = await usersAPI.getConsumers();
-        const data = response.data;
+        const data: any = response.data;
         const list: User[] = Array.isArray(data)
           ? data
           : Array.isArray(data?.users)

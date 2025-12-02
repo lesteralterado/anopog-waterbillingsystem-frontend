@@ -1,17 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { billsAPI } from '@/lib/api';
 import { Bill } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 export function useBills() {
+  const { user } = useAuth();
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isNetworkError, setIsNetworkError] = useState(false);
 
   const fetchBills = useCallback(async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
-      const response = await billsAPI.getMyBills();
+      const response = await billsAPI.getAll();
       const data = response.data;
       const list: Bill[] = Array.isArray(data)
         ? data
@@ -21,7 +25,9 @@ export function useBills() {
         ? data.data
         : [];
 
-      setBills(list);
+      // Filter bills for the current user
+      const userBills = list.filter((bill) => bill.consumer_id === parseInt(user.id));
+      setBills(userBills);
       setError(null);
       setIsNetworkError(false);
     } catch (err: any) {
@@ -31,7 +37,7 @@ export function useBills() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchBills();
