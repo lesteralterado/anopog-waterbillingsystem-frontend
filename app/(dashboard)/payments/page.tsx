@@ -7,8 +7,9 @@ import { Loading } from '@/app/components/ui/Loading'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/Card'
 import { Input } from '@/app/components/ui/Input'
 import { Select } from '@/app/components/ui/Select'
-import { AlertCircle, Search, Filter } from 'lucide-react'
+import { Search, Filter } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
+import Alert from '@/app/components/ui/Alert'
 
 const PAYMENT_METHOD_OPTIONS = [
   { label: 'All Methods', value: '' },
@@ -28,7 +29,7 @@ const STATUS_OPTIONS = [
 const DEFAULT_ITEMS_PER_PAGE = 10;
 
 function PaymentsPage() {
-  const { payments, loading, error } = usePayments()
+  const { payments, loading, error, isNetworkError } = usePayments()
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE)
   const [filters, setFilters] = useState({
@@ -84,22 +85,17 @@ function PaymentsPage() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Payments</h2>
-            <p className="text-gray-600">{error}</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="container mx-auto py-8 px-4">
+      {/* Error Message */}
+      {error && (
+        <Alert
+          type={isNetworkError ? 'warning' : 'error'}
+          message={error}
+          className="mb-6"
+        />
+      )}
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments</h1>
         <p className="text-gray-600">View and manage all payment transactions</p>

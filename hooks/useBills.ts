@@ -6,6 +6,7 @@ export function useBills() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isNetworkError, setIsNetworkError] = useState(false);
 
   const fetchBills = useCallback(async () => {
     try {
@@ -22,9 +23,11 @@ export function useBills() {
 
       setBills(list);
       setError(null);
-    } catch (err) {
+      setIsNetworkError(false);
+    } catch (err: any) {
       console.error('Failed to fetch bills:', err);
-      setError('Failed to load bills');
+      setIsNetworkError(err.name === 'NetworkError' || err.name === 'ServerError');
+      setError(err.message || 'Failed to load bills');
     } finally {
       setLoading(false);
     }
@@ -34,5 +37,5 @@ export function useBills() {
     fetchBills();
   }, [fetchBills]);
 
-  return { bills, loading, error, refetch: fetchBills };
+  return { bills, loading, error, isNetworkError, refetch: fetchBills };
 }

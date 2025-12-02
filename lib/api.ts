@@ -20,6 +20,29 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor for network error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (!error.response) {
+      // Network error (no response received)
+      const networkError = new Error('Oops! We couldn\'t connect to the server. Please check your internet connection and try again.');
+      networkError.name = 'NetworkError';
+      throw networkError;
+    }
+
+    // Server responded with error status
+    if (error.response.status >= 500) {
+      const serverError = new Error('Server Error: The server is currently unavailable. Please try again later.');
+      serverError.name = 'ServerError';
+      throw serverError;
+    }
+
+    // For other errors, re-throw as is
+    throw error;
+  }
+);
+
 // API Functions
 export const authAPI = {
   login: (email: string, password: string) =>

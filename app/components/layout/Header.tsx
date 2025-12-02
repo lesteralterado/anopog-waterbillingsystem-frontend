@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Menu, LogOut, User, Bell } from 'lucide-react';
 import { notificationsAPI } from '@/lib/api';
+import { NetworkStatusIndicator } from './NetworkStatus';
 // import Button from '@/app/components/ui/Button';
 
 interface HeaderProps {
@@ -52,6 +53,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
         {/* Right Side */}
         <div className="flex items-center gap-2">
+          <NetworkStatusIndicator />
           {/* Notifications */}
           <div className="relative">
             <button

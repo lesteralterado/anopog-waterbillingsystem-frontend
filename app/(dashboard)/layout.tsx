@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 // import Sidebar from '@/components/layout/Sidebar';
 import Sidebar from '@/app/components/layout/Sidebar';
 import Header from '@/app/components/layout/Header';
+import { NetworkStatusProvider } from '@/context/NetworkStatusContext';
+import NetworkStatus from '@/app/components/layout/NetworkStatus';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -31,17 +33,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!user) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar />
+    <NetworkStatusProvider>
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar */}
+        <Sidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-6">
-          {children}
-        </main>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-6">
+            <NetworkStatus />
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </NetworkStatusProvider>
   );
 }

@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { billsAPI, usersAPI } from '@/lib/api';
-import { Bill, User, MeterReadingAPI } from '@/types';
+import { useState, useEffect } from 'react';
+import { billsAPI } from '@/lib/api';
 import BillsTable from '@/app/components/bills/BillsTable';
 import { Button } from '@/app/components/ui/Button';
 import Pagination from '@/app/components/shared/Pagination';
@@ -16,76 +14,15 @@ import {
 } from '@/app/components/ui/Dialog';
 import { Loading } from '@/app/components/ui/Loading';
 import { Plus, Search } from 'lucide-react';
+import { useBills } from '@/hooks/useBills';
+import Alert from '@/app/components/ui/Alert';
 
 export default function BillsPage() {
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { bills, loading, error, isNetworkError, refetch } = useBills();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch consumers
-        const consumersRes = await usersAPI.getConsumers();
-        const consumersData = consumersRes.data;
-        const consumersList: User[] = Array.isArray(consumersData)
-          ? consumersData
-          : Array.isArray(consumersData?.users)
-          ? consumersData.users
-          : Array.isArray(consumersData?.data)
-          ? consumersData.data
-          : [];
-
-        if (!Array.isArray(consumersList)) {
-          console.error('Unexpected consumers response shape:', consumersRes.data);
-        }
-
-        // Fetch bills from the specific endpoint
-        const billsRes = await axios.get('https://anopog-waterbillingsystem-backend.onrender.com/api/billing');
-        const billsData = billsRes.data;
-        const billsList = billsData.bills || [];
-
-        // Fetch meter readings
-        const meterReadingsRes = await axios.get('https://anopog-waterbillingsystem-backend.onrender.com/api/meter-readings');
-        const meterReadingsData = meterReadingsRes.data;
-        const meterReadingsList: MeterReadingAPI[] = meterReadingsData.meterReadings || [];
-
-        // Transform bills to match Bill interface
-        const transformedBills: Bill[] = billsList.map((bill: any) => {
-          const consumer = consumersList.find(c => c.id === bill.user_id.toString());
-          const meterReading = meterReadingsList.find(mr => mr.user_id === bill.user_id.toString());
-          const consumption = meterReading ? meterReading.reading_value.d[0] || 0 : 0;
-
-          return {
-            id: bill.id,
-            consumer_id: bill.user_id,
-            consumer_name: consumer?.full_name || consumer?.username || '',
-            consumer_email: consumer?.email || '',
-            amount: bill.amount_due,
-            previous_reading: 0,
-            current_reading: consumption,
-            consumption: consumption,
-            due_date: bill.due_date || '',
-            status: bill.is_paid ? 'paid' : 'unpaid',
-            reading_date: '',
-            created_at: '',
-          };
-        });
-
-        setBills(transformedBills);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   const filteredBills = bills.filter((bill) =>
     bill.consumer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,6 +45,14 @@ export default function BillsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Error Message */}
+      {error && (
+        <Alert
+          type={isNetworkError ? 'warning' : 'error'}
+          message={error}
+        />
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -195,11 +140,7 @@ export default function BillsPage() {
                   due_date: dueDate,
                 });
 
-                const created = res.data?.bill ?? res.data;
-                if (created) {
-                  // prepend to list for immediate feedback
-                  setBills((prev) => [created, ...prev]);
-                }
+                refetch(); // Refresh the bills list
                 setIsDialogOpen(false);
               } catch (err) {
                 console.error('Failed to create bill', err);

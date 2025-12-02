@@ -6,6 +6,7 @@ export function usePayments() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isNetworkError, setIsNetworkError] = useState(false);
 
   const fetchPayments = useCallback(async () => {
     try {
@@ -49,9 +50,11 @@ export function usePayments() {
       console.log('Parsed and sorted payments list:', list);
       setPayments(list);
       setError(null);
-    } catch (err) {
+      setIsNetworkError(false);
+    } catch (err: any) {
       console.error('Failed to fetch payments:', err);
-      setError('Failed to load payments');
+      setIsNetworkError(err.name === 'NetworkError' || err.name === 'ServerError');
+      setError(err.message || 'Failed to load payments');
     } finally {
       setLoading(false);
     }
@@ -61,5 +64,5 @@ export function usePayments() {
     fetchPayments();
   }, [fetchPayments]);
 
-  return { payments, loading, error, refetch: fetchPayments };
+  return { payments, loading, error, isNetworkError, refetch: fetchPayments };
 }
