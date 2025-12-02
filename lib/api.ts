@@ -46,9 +46,16 @@ export const meterReadingsAPI = {
 
 export const incidentsAPI = {
   getAll: () => api.get('/api/issues'),
+  getById: (id: number | string) => api.get(`/api/issues/${id}`),
   create: (data: unknown) => api.post('/api/issues', data),
   updateStatus: (id: number, status: string) =>
     api.patch(`/api/issues/${id}`, { status }),
+  scheduleFix: (id: number | string, fixingDate: string) =>
+    api.put(`/api/issues/${id}`, { fixingDate }),
+  resolveIssue: (id: number | string, resolvedDate: string) =>
+    api.put(`/api/issues/${id}`, { isResolved: true, resolvedDate }),
+  sendResolutionReminder: (id: number | string) =>
+    api.post(`/api/issues/${id}/send-reminder`, {}),
 };
 
 export const usersAPI = {
@@ -98,6 +105,7 @@ export const dashboardAPI = {
 };
 
 export const notificationsAPI = {
+  getAll: () => api.get('/api/notifications'),
   registerDeviceToken: (token: string) => api.post('/api/register-device-token', { token }),
 };
 

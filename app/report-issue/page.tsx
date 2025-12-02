@@ -17,7 +17,6 @@ import { Loading } from '@/app/components/ui/Loading'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function ReportIssuePage() {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -83,7 +82,7 @@ export default function ReportIssuePage() {
         <CardHeader>
           <CardTitle className="text-2xl text-center">Report an Issue</CardTitle>
           <p className="text-gray-600 text-center">
-            Please provide details about the water service issue you're experiencing.
+            Please provide details about the water service issue you&apos;re experiencing.
           </p>
         </CardHeader>
         <CardContent>

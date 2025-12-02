@@ -1,4 +1,4 @@
-import { ReactNode, TableHTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from 'react';
+import { TableHTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from 'react';
 
 export function Table({
   className,

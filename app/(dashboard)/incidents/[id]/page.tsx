@@ -36,6 +36,7 @@ export default function IncidentDetailPage() {
 	const [error, setError] = useState<string>('')
 	const [addingComment, setAddingComment] = useState(false)
 	const [commentText, setCommentText] = useState('')
+	const [fixingDate, setFixingDate] = useState<string>('')
 
 	useEffect(() => {
 		if (!id) return
@@ -43,12 +44,23 @@ export default function IncidentDetailPage() {
 		const fetchIncident = async () => {
 			setLoading(true)
 			try {
-				console.log(`Fetching incident with ID: ${id}`)
-				const res = await api.get(`/api/issues/${id}`)
+				console.log(`Fetching all incidents to find ID: ${id}`)
+				const res = await incidentsAPI.getAll()
 				console.log('API response:', res)
-				const data = res.data?.incident ?? res.data ?? null
-				console.log('Parsed incident data:', data)
-				setIncident(data)
+				const data = res.data?.incidents ?? res.data?.issues ?? res.data ?? []
+				console.log('Parsed incidents data:', data)
+				const foundIncident = Array.isArray(data) ? data.find((incident: any) => incident.id.toString() === id) : null
+				console.log('Found incident:', foundIncident)
+				setIncident(foundIncident || null)
+				if (foundIncident) {
+					const existingFixingDate = foundIncident.fixing_date
+					if (existingFixingDate) {
+						setFixingDate(new Date(existingFixingDate).toISOString().split('T')[0])
+					} else {
+						const calculatedDueDate = new Date(new Date(foundIncident.created_at ?? foundIncident.createdAt ?? Date.now()).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+						setFixingDate(calculatedDueDate)
+					}
+				}
 			} catch (err: any) {
 				console.error('Failed to load incident', err)
 				console.error('Error response:', err?.response)
@@ -76,6 +88,51 @@ export default function IncidentDetailPage() {
 		} catch (err: any) {
 			console.error('Failed to update status', err)
 			toast.error('Failed to update status')
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const handleScheduleFix = async () => {
+		if (!incident || !fixingDate) return
+		try {
+			setLoading(true)
+			await incidentsAPI.scheduleFix(incident.id ?? id, fixingDate)
+			setIncident({ ...incident, fixing_date: fixingDate })
+			toast.success('Fix scheduled successfully. Consumer has been notified of the fixing date.')
+		} catch (err: any) {
+			console.error('Failed to schedule fix', err)
+			toast.error('Failed to schedule fix')
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const handleResolveIssue = async () => {
+		if (!incident) return
+		const resolvedDate = new Date().toISOString()
+		try {
+			setLoading(true)
+			await incidentsAPI.resolveIssue(incident.id ?? id, resolvedDate)
+			setIncident({ ...incident, is_resolved: true, resolved_date: resolvedDate, status: 'Resolved' })
+			toast.success('Issue resolved successfully')
+		} catch (err: any) {
+			console.error('Failed to resolve issue', err)
+			toast.error('Failed to resolve issue')
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const handleSendReminder = async () => {
+		if (!incident) return
+		try {
+			setLoading(true)
+			await incidentsAPI.sendResolutionReminder(incident.id ?? id)
+			toast.success('Resolution reminder sent to consumer')
+		} catch (err: any) {
+			console.error('Failed to send reminder', err)
+			toast.error('Failed to send reminder')
 		} finally {
 			setLoading(false)
 		}
@@ -150,7 +207,10 @@ export default function IncidentDetailPage() {
 								<Button variant="outline" onClick={() => handleChangeStatus('In Progress')}>
 									<Clock className="mr-2 h-4 w-4" /> Mark In Progress
 								</Button>
-								<Button onClick={() => handleChangeStatus('Resolved')}>
+								<Button variant="outline" onClick={handleSendReminder}>
+									<MessageSquare className="mr-2 h-4 w-4" /> Send Resolution Reminder
+								</Button>
+								<Button onClick={handleResolveIssue}>
 									<CheckCircle className="mr-2 h-4 w-4" /> Mark Resolved
 								</Button>
 							</div>
@@ -191,6 +251,20 @@ export default function IncidentDetailPage() {
 							<div className="text-sm text-gray-700 space-y-2">
 								<div><strong>Reported by:</strong> {incident.reported_by ?? incident.reporter ?? '—'}</div>
 								<div><strong>Date:</strong> {new Date(incident.created_at ?? incident.createdAt ?? Date.now()).toLocaleString()}</div>
+								<div>
+									<label className="block text-sm font-medium text-gray-700">Fixing Date</label>
+									<div className="flex gap-2">
+										<input
+											type="date"
+											value={fixingDate}
+											onChange={(e) => setFixingDate(e.target.value)}
+											className="mt-1 block flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+										/>
+										<Button onClick={handleScheduleFix} size="sm">Schedule Fix</Button>
+									</div>
+								</div>
+								{incident.fixing_date && <div><strong>Scheduled Fixing Date:</strong> {new Date(incident.fixing_date).toLocaleDateString()}</div>}
+								{incident.resolved_date && <div><strong>Resolved Date:</strong> {new Date(incident.resolved_date).toLocaleDateString()}</div>}
 								<div><strong>Priority:</strong> {incident.priority ?? 'Normal'}</div>
 								<div><strong>Contact:</strong> {incident.contact ?? '—'}</div>
 							</div>

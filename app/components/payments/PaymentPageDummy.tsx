@@ -18,10 +18,8 @@ import { Badge } from '@/app/components/ui/Badge'
 import { Loading } from '@/app/components/ui/Loading'
 import {
   Search,
-  Droplets,
   Calendar,
   User,
-  MapPin,
   Smartphone,
   CheckCircle,
   AlertCircle,

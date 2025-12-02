@@ -2,7 +2,7 @@ import { MeterReading } from '@/types';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/app/components/ui/Table';
 // import { Badge } from '@/app/components/ui/Badge';
 import { formatDate } from '@/lib/utils';
-import { Eye, Image } from 'lucide-react';
+import { Image } from 'lucide-react';
 import { useState } from 'react';
 
 interface ReadingsTableProps {

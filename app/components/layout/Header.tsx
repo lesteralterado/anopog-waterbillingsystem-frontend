@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Menu, LogOut, User, Bell } from 'lucide-react';
+import { notificationsAPI } from '@/lib/api';
 // import Button from '@/app/components/ui/Button';
 
 interface HeaderProps {
@@ -12,6 +13,22 @@ interface HeaderProps {
 export default function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotificationsMenu, setShowNotificationsMenu] = useState(false);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await notificationsAPI.getAll();
+        const data = res.data?.notifications ?? res.data ?? [];
+        setNotifications(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Failed to fetch notifications', err);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -34,10 +51,37 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {/* Right Side */}
         <div className="flex items-center gap-2">
           {/* Notifications */}
-          <button className="p-2 rounded-lg hover:bg-gray-100 relative cursor-pointer">
-            <Bell className="w-5 h-5 text-gray-600" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowNotificationsMenu(!showNotificationsMenu)}
+              className="p-2 rounded-lg hover:bg-gray-100 relative cursor-pointer"
+            >
+              <Bell className="w-5 h-5 text-gray-600" />
+              {notifications.length > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              )}
+            </button>
+
+            {showNotificationsMenu && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 max-h-96 overflow-y-auto">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="font-medium text-sm text-gray-900">Notifications</p>
+                </div>
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-4 text-sm text-gray-500">No notifications</div>
+                ) : (
+                  notifications.map((notification: any) => (
+                    <div key={notification.id} className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50">
+                      <p className="text-sm text-gray-900">{notification.message || notification.title}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(notification.created_at || notification.createdAt || Date.now()).toLocaleString()}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
 
           {/* User Menu */}
           <div className="relative">

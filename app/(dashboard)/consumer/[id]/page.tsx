@@ -6,6 +6,7 @@ import { usersAPI } from '@/lib/api';
 import { User } from '@/types';
 import { Loading } from '@/app/components/ui/Loading';
 import { Button } from '@/app/components/ui/Button';
+import { Modal } from '@/app/components/ui/Modal';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast, ToastContainer } from 'react-toastify';
@@ -16,6 +17,7 @@ export default function ConsumerDetailPage() {
   const id = params.id as string;
   const [consumer, setConsumer] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchConsumer = async () => {
@@ -44,11 +46,11 @@ export default function ConsumerDetailPage() {
     }
   }, [id]);
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this consumer? This action cannot be undone.')) {
-      return;
-    }
+  const handleDelete = () => {
+    setIsDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
     try {
       await usersAPI.remove(id);
       toast.success('Consumer deleted successfully');
@@ -57,6 +59,7 @@ export default function ConsumerDetailPage() {
       console.error('Failed to delete consumer:', error);
       toast.error('Failed to delete consumer');
     }
+    setIsDeleteDialogOpen(false);
   };
 
   if (loading) return <Loading />;
@@ -96,8 +99,8 @@ export default function ConsumerDetailPage() {
               Edit
             </Button>
           </Link>
-          <Button variant="destructive" onClick={handleDelete}>
-            <Trash2 className="w-4 h-4 mr-2" />
+          <Button className='text-white' variant="destructive" onClick={handleDelete}>
+            <Trash2 className="w-4 h-4 mr-2 text-white" />
             Delete
           </Button>
         </div>
@@ -150,6 +153,25 @@ export default function ConsumerDetailPage() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        title="Confirm Deletion"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
+              Delete
+            </Button>
+          </>
+        }
+      >
+        <p>Are you sure you want to delete this consumer? This action cannot be undone.</p>
+      </Modal>
+
       <ToastContainer />
     </div>
   );

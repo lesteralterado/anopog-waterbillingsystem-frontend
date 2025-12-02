@@ -290,7 +290,7 @@ export default function GCashPaymentComponent({
                 <p className="font-medium mb-1">How it works:</p>
                 <ol className="list-decimal list-inside space-y-1">
                   <li>Enter your GCash-registered mobile number</li>
-                  <li>You'll be redirected to GCash to authorize payment</li>
+                  <li>You&apos;ll be redirected to GCash to authorize payment</li>
                   <li>Enter your GCash PIN to confirm</li>
                   <li>Payment confirmation will be sent via SMS</li>
                 </ol>
