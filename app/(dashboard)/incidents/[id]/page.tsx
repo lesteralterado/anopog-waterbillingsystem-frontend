@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Image from 'next/image'
 import api, { incidentsAPI } from '@/lib/api'
 import { Button } from '@/app/components/ui/Button'
 import {
@@ -198,7 +199,7 @@ export default function IncidentDetailPage() {
 							{incident.images && incident.images.length > 0 && (
 								<div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
 									{incident.images.map((src: string, idx: number) => (
-										<img key={idx} src={src} alt={`incident-${idx}`} className="w-full h-40 object-cover rounded" />
+										<Image key={idx} src={src} alt={`incident-${idx}`} width={300} height={160} className="w-full h-40 object-cover rounded" />
 									))}
 								</div>
 							)}

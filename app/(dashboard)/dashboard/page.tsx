@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 // import useAuth from '@/hooks/useAuth';
 // import client from '@/api/client';
@@ -41,7 +40,7 @@ export default function WaterBillingDashboard() {
      paidBills: 0,
      monthlyRevenue: 0
    });
-   const [recentBills, setRecentBills] = useState<RecentBill[]>([]);
+   const [recentBills] = useState<RecentBill[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {

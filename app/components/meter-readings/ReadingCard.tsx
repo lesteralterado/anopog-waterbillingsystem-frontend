@@ -10,19 +10,6 @@ interface ReadingCardProps {
 }
 
 export default function ReadingCard({ reading, onViewPhoto }: ReadingCardProps) {
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'rejected':
-        return 'danger';
-      default:
-        return 'default';
-    }
-  };
-
   return (
     <Card className="hover:shadow-md transition-shadow">
       <div className="space-y-4 p-4">

@@ -41,7 +41,7 @@ export default function StatCard({
     try {
       await navigator.clipboard.writeText(String(value));
       setToast('Copied to clipboard');
-    } catch (err) {
+    } catch {
       setToast('Failed to copy');
     }
   };
@@ -51,7 +51,7 @@ export default function StatCard({
       try {
         onAction();
         setToast(`${actionLabel} successful`);
-      } catch (err) {
+      } catch {
         setToast(`${actionLabel} failed`);
       }
     } else {

@@ -116,7 +116,6 @@ export default function ConsumerPage() {
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredConsumers.length / itemsPerPage);
   const paginatedConsumers = filteredConsumers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage

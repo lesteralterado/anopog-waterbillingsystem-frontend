@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mockConsumers } from '@/lib/mockData';
-import { useAuth } from '@/context/AuthContext';
 import { Input } from '@/app/components/ui/Input';
 import { Select } from '@/app/components/ui/Select';
 import { Button } from '@/app/components/ui/Button';
@@ -14,7 +13,6 @@ import { ArrowLeft, Gauge } from 'lucide-react';
 
 export default function NewMeterReadingPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');

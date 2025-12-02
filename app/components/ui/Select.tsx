@@ -123,7 +123,6 @@ const SelectItem = forwardRef<HTMLElement, SelectItemProps>(({ value, asOption =
   if (asOption) {
     // Render a native option — cast ref to any to satisfy TS on option refs
     return (
-      // eslint-disable-next-line jsx-a11y/no-redundant-roles
       <option ref={ref as any} value={value} className={className} {...(props as any)}>
         {children}
       </option>
@@ -136,6 +135,7 @@ const SelectItem = forwardRef<HTMLElement, SelectItemProps>(({ value, asOption =
       ref={ref as any}
       className={`px-2 py-1 rounded hover:bg-gray-100 cursor-pointer ${className || ''}`}
       data-value={value}
+      aria-selected="false"
       {...props}
     >
       {children}

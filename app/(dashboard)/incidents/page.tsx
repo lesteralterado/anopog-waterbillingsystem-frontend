@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { incidentsAPI } from '@/lib/api'
-import { Button } from '@/app/components/ui/Button'
 import {
   Card,
   CardHeader,

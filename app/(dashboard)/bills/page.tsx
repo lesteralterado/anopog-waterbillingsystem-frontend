@@ -25,8 +25,6 @@ export default function BillsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Consumers state and loader
-  const [consumers, setConsumers] = useState<User[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,8 +43,6 @@ export default function BillsPage() {
         if (!Array.isArray(consumersList)) {
           console.error('Unexpected consumers response shape:', consumersRes.data);
         }
-
-        setConsumers(consumersList);
 
         // Fetch bills from the specific endpoint
         const billsRes = await axios.get('https://anopog-waterbillingsystem-backend.onrender.com/api/billing');

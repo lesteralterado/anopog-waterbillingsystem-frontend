@@ -96,8 +96,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         }
 
         // Forward data to backend endpoint using API utility
-        const response = await usersAPI.create(payload)
-        const result = response.data
+        await usersAPI.create(payload)
 
         toast.success('Consumer created successfully')
         router.push(`/consumer?purok=${form.purok}`)

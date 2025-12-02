@@ -257,7 +257,7 @@ export default function UsersPage() {
   )
 
   // Memoize filtered users for performance optimization
-  const memoizedFilteredUsers = useMemo(() => filteredUsers, [users, searchQuery])
+  // const memoizedFilteredUsers = useMemo(() => filteredUsers, [users, searchQuery])
 
   const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {

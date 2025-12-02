@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { meterReadingsAPI, usersAPI } from '@/lib/api';
 import { MeterReading } from '@/types';
 import ReadingsTable from '@/app/components/meter-readings/ReadingsTable';
@@ -16,7 +17,6 @@ export default function MeterReadingsPage() {
   const router = useRouter();
   const [readings, setReadings] = useState<MeterReading[]>([]);
   const [loading, setLoading] = useState(true);
-  const [consumersMap, setConsumersMap] = useState<Map<number, string>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
@@ -38,7 +38,6 @@ export default function MeterReadingsPage() {
           const name = consumer.full_name || consumer.username || `Consumer ${consumer.id}`;
           map.set(Number(consumer.id), name);
         }
-        setConsumersMap(map);
 
         // Then fetch meter readings
         const response = await meterReadingsAPI.getAll();
@@ -281,9 +280,11 @@ export default function MeterReadingsPage() {
             >
               ✕
             </button>
-            <img
+            <Image
               src={selectedImage}
               alt="Meter Reading"
+              width={800}
+              height={600}
               className="w-full h-auto rounded-lg shadow-2xl"
             />
           </div>

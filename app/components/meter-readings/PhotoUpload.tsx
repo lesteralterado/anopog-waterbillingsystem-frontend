@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
+import Image from 'next/image';
 
 interface PhotoUploadProps {
   onPhotoSelect: (photoUrl: string) => void;
@@ -54,9 +55,11 @@ export default function PhotoUpload({ onPhotoSelect, currentPhoto }: PhotoUpload
 
       {preview ? (
         <div className="relative">
-          <img
+          <Image
             src={preview}
             alt="Meter preview"
+            width={400}
+            height={256}
             className="w-full h-64 object-cover rounded-lg border-2 border-gray-300"
           />
           <button

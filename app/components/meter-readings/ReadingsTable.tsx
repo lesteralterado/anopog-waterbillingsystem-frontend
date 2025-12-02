@@ -2,8 +2,9 @@ import { MeterReading } from '@/types';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/app/components/ui/Table';
 // import { Badge } from '@/app/components/ui/Badge';
 import { formatDate } from '@/lib/utils';
-import { Image } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface ReadingsTableProps {
   readings: MeterReading[];
@@ -12,18 +13,18 @@ interface ReadingsTableProps {
 export default function ReadingsTable({ readings }: ReadingsTableProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'rejected':
-        return 'danger';
-      default:
-        return 'default';
-    }
-  };
+  // const getStatusVariant = (status: string) => {
+  //   switch (status) {
+  //     case 'approved':
+  //       return 'success';
+  //     case 'pending':
+  //       return 'warning';
+  //     case 'rejected':
+  //       return 'danger';
+  //     default:
+  //       return 'default';
+  //   }
+  // };
 
   return (
     <>
@@ -65,7 +66,7 @@ export default function ReadingsTable({ readings }: ReadingsTableProps) {
                       onClick={() => setSelectedImage(reading.photo_url!)}
                       className="flex items-center gap-2 text-sky-600 hover:text-sky-700"
                     >
-                      <Image className="w-4 h-4" />
+                      <ImageIcon className="w-4 h-4" />
                       <span className="text-sm">View</span>
                     </button>
                   ) : (
@@ -91,9 +92,11 @@ export default function ReadingsTable({ readings }: ReadingsTableProps) {
             >
               ✕
             </button>
-            <img
+            <Image
               src={selectedImage}
               alt="Meter Reading"
+              width={800}
+              height={600}
               className="w-full h-auto rounded-lg"
             />
           </div>

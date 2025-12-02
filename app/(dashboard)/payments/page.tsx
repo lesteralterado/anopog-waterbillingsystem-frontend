@@ -61,7 +61,7 @@ function PaymentsPage() {
   }, [payments, debouncedSearch, filters.paymentMethod, filters.status]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  // const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
   const paginatedPayments = filteredPayments.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
