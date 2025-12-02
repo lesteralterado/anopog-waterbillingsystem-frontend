@@ -11,7 +11,7 @@ import { Button } from '@/app/components/ui/Button';
 import { Users, DollarSign, TrendingUp, CheckCircle, Clock, FileText, CreditCard } from 'lucide-react';
 // import AdminSidebar from '@/app/components/AdminSidebar';
 import { ChartLineDefault as ChartLine } from '@/app/components/dashboard/chart-line';
-import { usersAPI, paymentsAPI, billsAPI } from '@/lib/api';
+import { usersAPI, paymentsAPI, billsAPI, dashboardAPI } from '@/lib/api';
 
 interface DashboardStats {
   totalConsumers: number;
@@ -61,33 +61,34 @@ export default function WaterBillingDashboard() {
 
     const loadDashboardStats = async () => {
       try {
-        // Calculate stats from available APIs since dashboard/stats endpoint doesn't exist
+        const res = await dashboardAPI.getBillStats();
+        const data = res.data ?? {};
 
-        // Get bills to calculate pending/paid counts
-        let pendingBills = 0;
-        let paidBills = 0;
+        setStats((prev) => ({
+          ...prev,
+          pendingBills: data.pendingBills ?? 0,
+          paidBills: data.paidBills ?? 0,
+          monthlyRevenue: data.monthlyRevenue ?? 0
+        }));
+      } catch (err) {
+        console.error('Failed to load dashboard stats:', err);
+        // Fallback to manual calculation if endpoint fails
         try {
+          let pendingBills = 0;
+          let paidBills = 0;
           const billsRes = await billsAPI.getAll();
           const bills = billsRes?.data ?? [];
           const billsArray = Array.isArray(bills) ? bills : [];
-
           pendingBills = billsArray.filter((bill: any) => bill.status === 'pending').length;
           paidBills = billsArray.filter((bill: any) => bill.status === 'paid').length;
-        } catch (billsErr) {
-          console.warn('Failed to load bills data, using defaults:', billsErr);
-        }
 
-        // Calculate monthly revenue from payments
-        let monthlyRevenue = 0;
-        try {
+          let monthlyRevenue = 0;
           const paymentsRes = await paymentsAPI.getAll();
           const payments = paymentsRes?.data ?? [];
           const paymentsArray = Array.isArray(payments) ? payments : [];
-
           const currentDate = new Date();
           const currentMonth = currentDate.getMonth();
           const currentYear = currentDate.getFullYear();
-
           monthlyRevenue = paymentsArray
             .filter((payment: any) => {
               const paymentDate = new Date(payment.created_at || payment.date);
@@ -95,18 +96,16 @@ export default function WaterBillingDashboard() {
                      paymentDate.getFullYear() === currentYear;
             })
             .reduce((total: number, payment: any) => total + (payment.amount || 0), 0);
-        } catch (paymentsErr) {
-          console.warn('Failed to load payments data, using 0 for revenue:', paymentsErr);
-        }
 
-        setStats((prev) => ({
-          ...prev,
-          pendingBills,
-          paidBills,
-          monthlyRevenue
-        }));
-      } catch (err) {
-        console.error('Failed to load dashboard stats:', err);
+          setStats((prev) => ({
+            ...prev,
+            pendingBills,
+            paidBills,
+            monthlyRevenue
+          }));
+        } catch (fallbackErr) {
+          console.error('Fallback calculation also failed:', fallbackErr);
+        }
       }
     };
 

@@ -28,16 +28,16 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-blue-950 border-r border-blue-800 h-screen sticky top-0">
       {/* Logo */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-blue-700">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg overflow-hidden">
             <Image src="/anopog.png" alt="Logo" width={40} height={40} className="object-cover" />
           </div>
           <div>
-            <h1 className="flex-col font-bold text-lg text-gray-900">Anopog<span>Water Billing</span></h1>
-            <p className="text-xs text-gray-500">Admin Portal</p>
+            <h1 className="flex-col font-bold text-lg text-white">Anopog<span>Water Billing</span></h1>
+            <p className="text-xs text-blue-200">Admin Portal</p>
           </div>
         </div>
       </div>
@@ -54,10 +54,10 @@ export default function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
+                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 shadow-sm',
                     isActive
-                      ? 'bg-sky-50 text-sky-600 font-medium'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-700 text-white font-medium shadow-md'
+                      : 'text-gray-200 hover:bg-blue-800 hover:shadow-md'
                   )}
                 >
                   <Icon className="w-5 h-5" />

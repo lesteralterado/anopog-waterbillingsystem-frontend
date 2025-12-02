@@ -102,6 +102,7 @@ export const usersAPI = {
 
 export const dashboardAPI = {
   getStats: () => api.get('/api/dashboard/stats'),
+  getBillStats: () => api.get('/api/admin/bill-stats'),
 };
 
 export const notificationsAPI = {
