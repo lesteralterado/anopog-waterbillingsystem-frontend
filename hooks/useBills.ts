@@ -15,9 +15,14 @@ export function useBills() {
 
     try {
       setLoading(true);
-      const response = await billsAPI.getAll();
+      let response;
+      if (user.role_id === '3') { // Consumer
+        response = await billsAPI.getMyBills();
+      } else {
+        response = await billsAPI.getAll();
+      }
       const data = response.data;
-      const list: Bill[] = Array.isArray(data)
+      const rawList: any[] = Array.isArray(data)
         ? data
         : Array.isArray(data?.bills)
         ? data.bills
@@ -25,8 +30,24 @@ export function useBills() {
         ? data.data
         : [];
 
-      // Filter bills for the current user
-      const userBills = list.filter((bill) => bill.consumer_id === parseInt(user.id));
+      // Map API response to Bill interface
+      const list: Bill[] = rawList.map((bill) => ({
+        id: parseInt(bill.id),
+        consumer_id: parseInt(bill.user_id),
+        consumer_name: '', // Not provided by API
+        consumer_email: '', // Not provided by API
+        amount: bill.amount_due,
+        previous_reading: 0, // Not provided
+        current_reading: 0, // Not provided
+        consumption: 0, // Not provided
+        due_date: bill.due_date || '', // API returns {}, so empty string
+        status: bill.is_paid ? 'paid' : 'unpaid',
+        reading_date: '', // Not provided
+        created_at: '', // Not provided
+      }));
+
+      // For consumers, API already filters; for others, show all
+      const userBills = user.role_id === '3' ? list : list;
       setBills(userBills);
       setError(null);
       setIsNetworkError(false);

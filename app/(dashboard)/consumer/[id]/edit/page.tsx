@@ -90,7 +90,7 @@ export default function EditConsumerPage() {
         address: form.address.trim() || null,
         email: form.email.trim() || null,
         full_name: form.fullName.trim(),
-        meter_number: form.meterNumber.trim(),
+        meterNumber: form.meterNumber.trim(),
         phone: form.phone.trim() || null,
         purok: parseInt(form.purok) || null,
       }

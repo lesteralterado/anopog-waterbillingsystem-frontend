@@ -90,9 +90,9 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             address: form.address.trim() || null,
             email: form.email.trim() || null,
             full_name: form.fullName.trim(),
-            meter_number: form.meterNumber.trim(),
+            meterNumber: form.meterNumber.trim(),
             phone: form.phone.trim() || null,
-            purok: `Purok ${form.purok}`,
+            purok: `${form.purok}`,
         }
 
         // Forward data to backend endpoint using API utility
