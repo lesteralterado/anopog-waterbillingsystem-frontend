@@ -27,6 +27,7 @@ const chartData = [
   { month: "October", usage: 73 },
   { month: "November", usage: 209 },
   { month: "December", usage: 214 },
+  { month: "Jan", usage: 214 },
 ]
 
 const chartConfig = {
@@ -41,7 +42,7 @@ export function ChartLineDefault() {
     <Card>
       <CardHeader>
         <CardTitle>Consumption</CardTitle>
-        <CardDescription>July - December 2025</CardDescription>
+        <CardDescription>July - January 2026</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-40 w-full">
@@ -83,7 +84,7 @@ export function ChartLineDefault() {
           Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
         </div>
         <div className="text-muted-foreground leading-none">
-          Showing total water usage for the last 6 months
+          Showing total water usage for the last 7 months
         </div>
       </CardFooter>
     </Card>

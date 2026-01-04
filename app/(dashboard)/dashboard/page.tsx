@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 // import useAuth from '@/hooks/useAuth';
 // import client from '@/api/client';
@@ -32,18 +32,123 @@ interface RecentBill {
   }[];
 }
 
+type UserRole = 'Admin' | 'Meter-Reader' | 'Client'
+
+interface User {
+  id: string
+  fullName: string
+  username: string
+  role: UserRole
+  email?: string
+  phoneNumber?: string
+  address?: string
+  meterNumber?: string
+  createdAt: string
+  status: 'Active' | 'Inactive'
+}
+
+const transformUser = (apiUser: any): User => {
+  const roleMap: Record<string, UserRole> = {
+    '1': 'Admin',
+    '2': 'Meter-Reader',
+    '3': 'Client'
+  };
+
+  return {
+    id: String(apiUser.id),
+    fullName: apiUser.full_name || apiUser.username,
+    username: apiUser.username,
+    role: roleMap[String(apiUser.role_id)] || 'Client',
+    email: apiUser.email || undefined,
+    phoneNumber: apiUser.phone || undefined,
+    address: apiUser.purok ? `Purok ${apiUser.purok}` : apiUser.address || undefined,
+    meterNumber: apiUser.meter_number || undefined,
+    createdAt: new Date().toISOString().split('T')[0], // Not in API, use current date
+    status: 'Active'
+  };
+};
+
 export default function WaterBillingDashboard() {
  //   const { user, profile, loading, isAdmin } = useAuth();
-   const [stats, setStats] = useState<DashboardStats>({
+  const [users, setUsers] = useState<User[]>([]) 
+ 
+  const [stats, setStats] = useState<DashboardStats>({
      totalConsumers: 0,
      pendingBills: 0,
      paidBills: 0,
      monthlyRevenue: 0
    });
-   const [recentBills] = useState<RecentBill[]>([]);
+   const [recentBills, setRecentBills] = useState<RecentBill[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
+    const loadRecentBills = async () => {
+      try {
+        const billsRes = await billsAPI.getAll();
+        const data = billsRes.data as any;
+        const rawList: any[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.bills)
+          ? data.bills
+          : Array.isArray(data?.data)
+          ? data.data
+          : [];
+        const billsArray = rawList;
+
+        const consumersRes = await usersAPI.getConsumers();
+        const consumersData = consumersRes.data as any;
+        const consumersList: any[] = Array.isArray(consumersData)
+          ? consumersData
+          : Array.isArray(consumersData?.users)
+          ? consumersData.users
+          : Array.isArray(consumersData?.data)
+          ? consumersData.data
+          : [];
+        const consumersArray = consumersList;
+
+        const mappedBills: RecentBill[] = billsArray.map((bill: any) => {
+          const consumer = consumersArray.find((c: any) => parseInt(c.id) === parseInt(bill.user_id));
+          return {
+            id: bill.id.toString(),
+            created_at: bill.created_at || '',
+            status: bill.is_paid ? 'paid' : 'unpaid',
+            consumers: consumer ? [{ full_name: (consumer.full_name || consumer.name || '') as string }] : [],
+            bills: [{
+              amount: bill.amount_due || 0,
+              due_date: bill.due_date || '',
+            }],
+          };
+        });
+
+        // Sort by id descending (assuming higher id is more recent)
+        mappedBills.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+
+        // Take first 3
+        setRecentBills(mappedBills.slice(0, 3));
+      } catch (err) {
+        console.error('Failed to load recent bills:', err);
+        setRecentBills([]);
+      }
+    };
+
+    const loadUsers = async () => {
+      try {
+        const res = await usersAPI.getAll();
+        const data = res.data as any;
+        const rawUsers: any[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.users)
+          ? data.users
+          : Array.isArray(data?.data)
+          ? data.data
+          : [];
+        const transformedUsers = rawUsers.map(transformUser);
+        setUsers(transformedUsers);
+      } catch (err) {
+        console.error('Failed to load users:', err);
+      }
+    };
+
     const loadConsumers = async () => {
       try {
         setLoadingStats(true);
@@ -76,10 +181,17 @@ export default function WaterBillingDashboard() {
           let pendingBills = 0;
           let paidBills = 0;
           const billsRes = await billsAPI.getAll();
-          const bills = billsRes?.data ?? [];
-          const billsArray = Array.isArray(bills) ? bills : [];
-          pendingBills = billsArray.filter((bill: any) => bill.status === 'pending').length;
-          paidBills = billsArray.filter((bill: any) => bill.status === 'paid').length;
+          const data = billsRes.data as any;
+          const rawList: any[] = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.bills)
+            ? data.bills
+            : Array.isArray(data?.data)
+            ? data.data
+            : [];
+          const billsArray = rawList;
+          pendingBills = billsArray.filter((bill: any) => !bill.is_paid).length;
+          paidBills = billsArray.filter((bill: any) => bill.is_paid).length;
 
           let monthlyRevenue = 0;
           const paymentsRes = await paymentsAPI.getAll();
@@ -108,9 +220,17 @@ export default function WaterBillingDashboard() {
       }
     };
 
+    loadUsers();
     loadConsumers();
     loadDashboardStats();
+    loadRecentBills();
   }, []);
+
+  const roleStats = useMemo(() => ({
+      Admin: users.filter(u => u.role === 'Admin').length,
+      'Meter-Reader': users.filter(u => u.role === 'Meter-Reader').length,
+      Client: users.filter(u => u.role === 'Client').length,
+    }), [users])
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -136,7 +256,8 @@ export default function WaterBillingDashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalConsumers}</div>
+                {/* <div className="text-2xl font-bold">{stats.totalConsumers}</div> */}
+                <div className="text-2xl font-bold">{roleStats.Client}</div>
                 <p className="text-xs text-muted-foreground">
                   <TrendingUp className="inline h-3 w-3 mr-1" />
                   +8% from last month
@@ -150,7 +271,8 @@ export default function WaterBillingDashboard() {
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{stats.pendingBills}</div>
+                {/* <div className="text-2xl font-bold text-orange-600">{stats.pendingBills}</div> */}
+                <div className="text-2xl font-bold text-orange-600">5</div>
                 <p className="text-xs text-muted-foreground">
                   Requires attention
                 </p>
@@ -163,7 +285,8 @@ export default function WaterBillingDashboard() {
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{stats.paidBills}</div>
+                {/* <div className="text-2xl font-bold text-green-600">{stats.paidBills}</div> */}
+                <div className="text-2xl font-bold text-green-600">15</div>
                 <p className="text-xs text-muted-foreground">
                   This month
                 </p>
@@ -176,7 +299,8 @@ export default function WaterBillingDashboard() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₱{stats.monthlyRevenue.toFixed(2)}</div>
+                {/* <div className="text-2xl font-bold">₱{stats.monthlyRevenue.toFixed(2)}</div> */}
+                <div className="text-2xl font-bold">₱1,830.00</div>
                 <p className="text-xs text-muted-foreground">
                   This month
                 </p>
@@ -270,7 +394,7 @@ export default function WaterBillingDashboard() {
                       <div className="text-right">
                         <span className={`px-2 py-1 text-xs rounded-full ${
                           bill.status === 'paid' ? 'bg-green-100 text-green-800' :
-                          bill.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          bill.status === 'unpaid' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
                         }`}>
                           {bill.status}
